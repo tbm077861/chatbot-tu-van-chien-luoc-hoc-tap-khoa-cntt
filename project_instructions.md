@@ -76,6 +76,24 @@ Chatbot phải:
 
 **Ngành đã có file:** IS
 **Ngành cần bổ sung:** CS, DS, SE, IT — mục tiêu ~100.000 bản ghi tổng cộng
+...
+
+**Lưu ý quan trọng — Mapping học kỳ:**
+Cột `TenDot` dùng hệ thống HK1/HK2/HK3 theo năm học (HK lẻ/chẵn/hè),
+KHÁC với HK1–HK9 liên tục trong chương trình khung.
+
+Quy đổi (ví dụ SV nhập học 2019):
+- `HK1 (2019-2020)` → Curriculum HK1
+- `HK2 (2019-2020)` → Curriculum HK2
+- `HK3 (2019-2020)` → Kỳ hè (không có trong chương trình khung chuẩn)
+- `HK1 (2020-2021)` → Curriculum HK3
+- `HK2 (2020-2021)` → Curriculum HK4
+- ...
+
+Công thức: `curriculum_hk = (start_year_of_TenDot - năm_nhập_học) × 2 + hk_so`
+(với hk_so = 1 hoặc 2; HK3 hè xử lý riêng)
+
+Parser phải tạo thêm cột `curriculum_hk` từ `TenDot` + `năm_nhập_học` (suy từ IDSinhVien).
 
 ### 2.3 Quy định học vụ
 
@@ -192,6 +210,7 @@ Theo cluster định hướng nghề nghiệp:
 - **Tiền xử lý bắt buộc:**
   - Chuẩn hóa tên môn học (lowercase, bỏ dấu thừa)
   - Parse `TenDot` → (`hk_so`: int, `nam_hoc`: str)
+  - **Tính `curriculum_hk`** từ `hk_so` + `nam_hoc` + năm nhập học (2 chữ số đầu IDSinhVien)
   - Xử lý missing values trong cột điểm
   - Loại bỏ duplicate (cùng SV, cùng môn, khác đợt → giữ điểm cao nhất)
 - **Tăng cường — phải có ít nhất 3 trong 4 phương pháp sau:**
@@ -439,6 +458,11 @@ USER_TEMPLATE = """
 
 6. **Cold start:** Sinh viên năm 1 chưa có lịch sử điểm → fallback sang content-based recommendation dựa trên mục tiêu nghề nghiệp
 
+7. **Hai hệ thống học kỳ:** Chương trình khung dùng HK1–HK9 liên tục,
+   file điểm dùng HK1/HK2/HK3 theo năm. Luôn quy đổi về `curriculum_hk`
+   trước khi so sánh với prerequisite graph. Kỳ hè (HK3) không nằm trong
+   chương trình khung chuẩn — sinh viên có thể học vượt hoặc học lại trong kỳ hè.
+   
 ---
 
 ## 13. VÍ DỤ CASE STUDY (Dùng để test)

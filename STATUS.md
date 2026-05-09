@@ -76,7 +76,10 @@
 
 - ⏳ Chưa có file xlsx của 4 ngành CS, DS, SE, IT — cần user bổ sung khi có.
 - ⏳ Chưa có file quy định học vụ thực tế — đang dùng giá trị mặc định trong code.
-- ⏳ Chưa quyết định LLM cuối cùng cho generation: Vistral-7B vs Qwen2.5-7B-Instruct (sẽ quyết khi đến giai đoạn 4).
+- ⏳ Chưa quyết định LLM cuối cùng cho generation: Vistral-7B vs Qwen2.5-7B-Instruct (sẽ quyết khi đến giai đoạn 
+4).
+- ✅ (đã giải quyết) Phát hiện 2 hệ thống HK: curriculum HK1–9 vs TenDot HK1/2/3.
+  Giải pháp: thêm cột `curriculum_hk` trong preprocessor, công thức quy đổi đã xác định.
 
 ---
 

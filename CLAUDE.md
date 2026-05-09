@@ -45,7 +45,11 @@ Chi tiết đầy đủ: đọc `project_instructions.md`.
 - Môn có dấu `*` (Giáo dục thể chất, Quốc phòng, Chứng chỉ Tiếng Anh) → loại khỏi tính GPA.
 - Output dữ liệu: `.parquet` (chính, nhanh) + `.csv` (debug, dễ xem).
 - **Không commit** file dữ liệu thô lên git (đã có `.gitignore`).
-
+- **Hai hệ thống học kỳ:** Chương trình khung dùng HK1–HK9 (liên tục),
+  file điểm TenDot dùng HK1/HK2/HK3 + năm học (lẻ/chẵn/hè).
+  Luôn quy đổi bằng cột `curriculum_hk` trước khi map với prerequisite graph.
+  Công thức: `curriculum_hk = (start_year - năm_nhập_học) × 2 + hk_so`.
+  HK3 hè → `curriculum_hk = None` (xử lý riêng).
 ### Phụ thuộc
 - **Không tự ý `pip install`** thư viện nặng (`torch`, `transformers`, `faiss`, `sentence-transformers`, `peft`, `ragas`). Hỏi user trước.
 - Nếu user đồng ý, thêm vào `requirements.txt` đúng nhóm (Core / NLP / RAG / API).
