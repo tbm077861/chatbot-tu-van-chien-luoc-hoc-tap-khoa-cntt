@@ -1,0 +1,1120 @@
+{
+  "nganh": "DS",
+  "hoc_ky": [
+    {
+      "hk_so": 1,
+      "tong_tc": 11,
+      "hoc_phan": [
+        {
+          "ma_mon": "002009",
+          "ten_mon": "Nhập môn Tin học",
+          "ma_hoc_phan": "4203002009",
+          "loai": "bat_buoc",
+          "so_tc": 2,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003192",
+          "ten_mon": "Kỹ năng làm việc nhóm",
+          "ma_hoc_phan": "4203003192",
+          "loai": "bat_buoc",
+          "so_tc": 2,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003242",
+          "ten_mon": "Giáo dục Quốc phòng và An ninh 1",
+          "ma_hoc_phan": "4203003242",
+          "loai": "bat_buoc",
+          "so_tc": 4,
+          "so_tiet_lt": 60,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": true,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003259",
+          "ten_mon": "Toán cao cấp 1",
+          "ma_hoc_phan": "4203003259",
+          "loai": "bat_buoc",
+          "so_tc": 2,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003307",
+          "ten_mon": "Giáo dục thể chất 1",
+          "ma_hoc_phan": "4203003307",
+          "loai": "bat_buoc",
+          "so_tc": 2,
+          "so_tiet_lt": 0,
+          "so_tiet_th": 60,
+          "khong_tinh_gpa": true,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003848",
+          "ten_mon": "Nhập môn Lập trình",
+          "ma_hoc_phan": "4203003848",
+          "loai": "bat_buoc",
+          "so_tc": 2,
+          "so_tiet_lt": 0,
+          "so_tiet_th": 60,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014164",
+          "ten_mon": "Triết học Mác - Lênin",
+          "ma_hoc_phan": "4203014164",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "015216",
+          "ten_mon": "Chứng chỉ Tiếng Anh",
+          "ma_hoc_phan": "4203015216",
+          "loai": "bat_buoc",
+          "so_tc": 0,
+          "so_tiet_lt": 0,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": true,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        }
+      ]
+    },
+    {
+      "hk_so": 2,
+      "tong_tc": 12,
+      "hoc_phan": [
+        {
+          "ma_mon": "000941",
+          "ten_mon": "Kỹ thuật lập trình",
+          "ma_hoc_phan": "4203000941",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [
+            "003848"
+          ],
+          "loai_dieu_kien": "a"
+        },
+        {
+          "ma_mon": "002137",
+          "ten_mon": "Hệ thống Máy tính",
+          "ma_hoc_phan": "4203002137",
+          "loai": "bat_buoc",
+          "so_tc": 4,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003306",
+          "ten_mon": "Giáo dục thể chất 2",
+          "ma_hoc_phan": "4203003306",
+          "loai": "bat_buoc",
+          "so_tc": 2,
+          "so_tiet_lt": 0,
+          "so_tiet_th": 60,
+          "khong_tinh_gpa": true,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003354",
+          "ten_mon": "Giáo dục quốc phòng và an ninh 2",
+          "ma_hoc_phan": "4203003354",
+          "loai": "bat_buoc",
+          "so_tc": 4,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 60,
+          "khong_tinh_gpa": true,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014165",
+          "ten_mon": "Kinh tế chính trị Mác - Lênin",
+          "ma_hoc_phan": "4203014165",
+          "loai": "bat_buoc",
+          "so_tc": 2,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "015253",
+          "ten_mon": "Tiếng Anh 1",
+          "ma_hoc_phan": "4203015253",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": true,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003193",
+          "ten_mon": "Toán ứng dụng",
+          "ma_hoc_phan": "4203003193",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003240",
+          "ten_mon": "Hàm phức và phép biến đổi Laplace",
+          "ma_hoc_phan": "4203003240",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003320",
+          "ten_mon": "Phương pháp tính",
+          "ma_hoc_phan": "4203003320",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003345",
+          "ten_mon": "Vật lý đại cương",
+          "ma_hoc_phan": "4203003345",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003395",
+          "ten_mon": "Logic học",
+          "ma_hoc_phan": "4203003395",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        }
+      ]
+    },
+    {
+      "hk_so": 3,
+      "tong_tc": 19,
+      "hoc_phan": [
+        {
+          "ma_mon": "000901",
+          "ten_mon": "Cấu trúc rời rạc",
+          "ma_hoc_phan": "4203000901",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "000942",
+          "ten_mon": "Cấu trúc dữ liệu và giải thuật",
+          "ma_hoc_phan": "4203000942",
+          "loai": "bat_buoc",
+          "so_tc": 4,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [
+            "003848"
+          ],
+          "loai_dieu_kien": "a"
+        },
+        {
+          "ma_mon": "001146",
+          "ten_mon": "Hệ cơ sở dữ liệu",
+          "ma_hoc_phan": "4203001146",
+          "loai": "bat_buoc",
+          "so_tc": 4,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [
+            "002009"
+          ],
+          "loai_dieu_kien": "a"
+        },
+        {
+          "ma_mon": "003288",
+          "ten_mon": "Toán cao cấp 2",
+          "ma_hoc_phan": "4203003288",
+          "loai": "bat_buoc",
+          "so_tc": 2,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003591",
+          "ten_mon": "Lập trình hướng đối tượng",
+          "ma_hoc_phan": "4203003591",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [
+            "003848"
+          ],
+          "loai_dieu_kien": "a"
+        },
+        {
+          "ma_mon": "015254",
+          "ten_mon": "Tiếng Anh 2",
+          "ma_hoc_phan": "4203015254",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": true,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "001103",
+          "ten_mon": "Địa lý kinh tế",
+          "ma_hoc_phan": "4203001103",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003197",
+          "ten_mon": "Kỹ năng xây dựng kế hoạch",
+          "ma_hoc_phan": "4203003197",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003206",
+          "ten_mon": "Môi trường và con người",
+          "ma_hoc_phan": "4203003206",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "015296",
+          "ten_mon": "Công nghệ thông tin trong chuyển đổi số",
+          "ma_hoc_phan": "4203015296",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "015299",
+          "ten_mon": "Ứng dụng hóa học trong Công nghiệp",
+          "ma_hoc_phan": "4203015299",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "015300",
+          "ten_mon": "Ứng dụng 5S và Kaizen trong sản xuất",
+          "ma_hoc_phan": "4203015300",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        }
+      ]
+    },
+    {
+      "hk_so": 4,
+      "tong_tc": 20,
+      "hoc_phan": [
+        {
+          "ma_mon": "001058",
+          "ten_mon": "Mạng máy tính",
+          "ma_hoc_phan": "4203001058",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "002422",
+          "ten_mon": "Pháp luật đại cương",
+          "ma_hoc_phan": "4203002422",
+          "loai": "bat_buoc",
+          "so_tc": 2,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003198",
+          "ten_mon": "Phương pháp luận nghiên cứu khoa học",
+          "ma_hoc_phan": "4203003198",
+          "loai": "bat_buoc",
+          "so_tc": 2,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014104",
+          "ten_mon": "Nhập môn Khoa học Dữ liệu",
+          "ma_hoc_phan": "4203014104",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "015410",
+          "ten_mon": "Nhập môn Kĩ thuật Dữ liệu",
+          "ma_hoc_phan": "4203015410",
+          "loai": "bat_buoc",
+          "so_tc": 2,
+          "so_tiet_lt": 15,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "015411",
+          "ten_mon": "Xác suất trong Khoa học Dữ liệu",
+          "ma_hoc_phan": "4203015411",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014062",
+          "ten_mon": "Giải thuật và tối ưu hóa phân tán",
+          "ma_hoc_phan": "4203014062",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014063",
+          "ten_mon": "Trực quan hóa dữ liệu",
+          "ma_hoc_phan": "4203014063",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014064",
+          "ten_mon": "Đại số tuyến tính tính toán",
+          "ma_hoc_phan": "4203014064",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014106",
+          "ten_mon": "Quá trình ngẫu nhiên",
+          "ma_hoc_phan": "4203014106",
+          "loai": "tu_chon",
+          "so_tc": 2,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014107",
+          "ten_mon": "Các ngôn ngữ truy vấn cơ sở dữ liệu",
+          "ma_hoc_phan": "4203014107",
+          "loai": "tu_chon",
+          "so_tc": 2,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        }
+      ]
+    },
+    {
+      "hk_so": 5,
+      "tong_tc": 18,
+      "hoc_phan": [
+        {
+          "ma_mon": "001266",
+          "ten_mon": "Trí tuệ nhân tạo",
+          "ma_hoc_phan": "4203001266",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [
+            "000901"
+          ],
+          "loai_dieu_kien": "a"
+        },
+        {
+          "ma_mon": "003347",
+          "ten_mon": "Những vấn đề xã hội và đạo đức nghề nghiệp",
+          "ma_hoc_phan": "4203003347",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003451",
+          "ten_mon": "Thống kê máy tính và ứng dụng",
+          "ma_hoc_phan": "4203003451",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [
+            "000941"
+          ],
+          "loai_dieu_kien": "a"
+        },
+        {
+          "ma_mon": "014105",
+          "ten_mon": "Lập trình phân tích dữ liệu",
+          "ma_hoc_phan": "4203014105",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014109",
+          "ten_mon": "Tối ưu hóa cho Khoa học dữ liệu",
+          "ma_hoc_phan": "4203014109",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014110",
+          "ten_mon": "Phân tích chuỗi thời gian",
+          "ma_hoc_phan": "4203014110",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014111",
+          "ten_mon": "Kỹ thuật tài chính",
+          "ma_hoc_phan": "4203014111",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014122",
+          "ten_mon": "Xử lý ảnh",
+          "ma_hoc_phan": "4203014122",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [
+            "000941",
+            "000942"
+          ],
+          "loai_dieu_kien": "a"
+        }
+      ]
+    },
+    {
+      "hk_so": 6,
+      "tong_tc": 20,
+      "hoc_phan": [
+        {
+          "ma_mon": "003443",
+          "ten_mon": "Khai thác dữ liệu và ứng dụng",
+          "ma_hoc_phan": "4203003443",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [
+            "001146"
+          ],
+          "loai_dieu_kien": "a"
+        },
+        {
+          "ma_mon": "003501",
+          "ten_mon": "Phát triển ứng dụng",
+          "ma_hoc_phan": "4203003501",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003711",
+          "ten_mon": "Máy học",
+          "ma_hoc_phan": "4203003711",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [
+            "001146"
+          ],
+          "loai_dieu_kien": "a"
+        },
+        {
+          "ma_mon": "014167",
+          "ten_mon": "Chủ nghĩa xã hội khoa học",
+          "ma_hoc_phan": "4203014167",
+          "loai": "bat_buoc",
+          "so_tc": 2,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "015412",
+          "ten_mon": "Kiến trúc hướng dịch vụ và Điện toán đám mây",
+          "ma_hoc_phan": "4203015412",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "001076",
+          "ten_mon": "Tương tác người máy",
+          "ma_hoc_phan": "4203001076",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [
+            "002137"
+          ],
+          "loai_dieu_kien": "a"
+        },
+        {
+          "ma_mon": "001111",
+          "ten_mon": "Công nghệ phần mềm",
+          "ma_hoc_phan": "4203001111",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [
+            "001146"
+          ],
+          "loai_dieu_kien": "a"
+        },
+        {
+          "ma_mon": "003453",
+          "ten_mon": "Tiếp thị điện tử",
+          "ma_hoc_phan": "4203003453",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014112",
+          "ten_mon": "Nhập môn Robot",
+          "ma_hoc_phan": "4203014112",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014113",
+          "ten_mon": "Giao dịch định lượng",
+          "ma_hoc_phan": "4203014113",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014114",
+          "ten_mon": "Tính toán song song",
+          "ma_hoc_phan": "4203014114",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014115",
+          "ten_mon": "Khai phá đồ thị",
+          "ma_hoc_phan": "4203014115",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        }
+      ]
+    },
+    {
+      "hk_so": 7,
+      "tong_tc": 16,
+      "hoc_phan": [
+        {
+          "ma_mon": "000664",
+          "ten_mon": "Tư tưởng Hồ Chí Minh",
+          "ma_hoc_phan": "4203000664",
+          "loai": "bat_buoc",
+          "so_tc": 2,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "002329",
+          "ten_mon": "Nhập môn dữ liệu lớn",
+          "ma_hoc_phan": "4203002329",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [
+            "001146"
+          ],
+          "loai_dieu_kien": "a"
+        },
+        {
+          "ma_mon": "004116",
+          "ten_mon": "Học sâu",
+          "ma_hoc_phan": "4203004116",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014169",
+          "ten_mon": "Lịch sử Đảng Cộng sản Việt Nam",
+          "ma_hoc_phan": "4203014169",
+          "loai": "bat_buoc",
+          "so_tc": 2,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "001004",
+          "ten_mon": "Nhập môn an toàn thông tin",
+          "ma_hoc_phan": "4203001004",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [
+            "002137"
+          ],
+          "loai_dieu_kien": "a"
+        },
+        {
+          "ma_mon": "003194",
+          "ten_mon": "Hội họa",
+          "ma_hoc_phan": "4203003194",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003195",
+          "ten_mon": "Xã hội học",
+          "ma_hoc_phan": "4203003195",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003203",
+          "ten_mon": "Âm nhạc – Nhạc lý và Guitar căn bản",
+          "ma_hoc_phan": "4203003203",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003245",
+          "ten_mon": "Tiếng Việt thực hành",
+          "ma_hoc_phan": "4203003245",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003325",
+          "ten_mon": "Tâm lý học đại cương",
+          "ma_hoc_phan": "4203003325",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "010665",
+          "ten_mon": "Cơ sở văn hóa Việt Nam",
+          "ma_hoc_phan": "4203010665",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014116",
+          "ten_mon": "Hệ khuyến nghị",
+          "ma_hoc_phan": "4203014116",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014117",
+          "ten_mon": "Lý thuyết trò chơi",
+          "ma_hoc_phan": "4203014117",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014193",
+          "ten_mon": "Kỹ năng sử dụng bàn phím và thiết bị văn phòng",
+          "ma_hoc_phan": "4203014193",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        }
+      ]
+    },
+    {
+      "hk_so": 8,
+      "tong_tc": 15,
+      "hoc_phan": [
+        {
+          "ma_mon": "001385",
+          "ten_mon": "Xử lý ngôn ngữ tự nhiên",
+          "ma_hoc_phan": "4203001385",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 45,
+          "so_tiet_th": 0,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003147",
+          "ten_mon": "Công nghệ mới trong phát triển ứng dụng CNTT",
+          "ma_hoc_phan": "4203003147",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014118",
+          "ten_mon": "Thị giác máy tính",
+          "ma_hoc_phan": "4203014118",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014180",
+          "ten_mon": "Các nền tảng dữ liệu",
+          "ma_hoc_phan": "4203014180",
+          "loai": "bat_buoc",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "003592",
+          "ten_mon": "Đảm bảo chất lượng và Kiểm thử phần mềm",
+          "ma_hoc_phan": "4203003592",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [
+            "001111"
+          ],
+          "loai_dieu_kien": "a"
+        },
+        {
+          "ma_mon": "014119",
+          "ten_mon": "Phân tích dữ liệu Bayesian",
+          "ma_hoc_phan": "4203014119",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014120",
+          "ten_mon": "Phân tích kinh doanh",
+          "ma_hoc_phan": "4203014120",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014121",
+          "ten_mon": "Giải tích ngẫu nhiên cho tài chính",
+          "ma_hoc_phan": "4203014121",
+          "loai": "tu_chon",
+          "so_tc": 3,
+          "so_tiet_lt": 30,
+          "so_tiet_th": 30,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        }
+      ]
+    },
+    {
+      "hk_so": 9,
+      "tong_tc": 13,
+      "hoc_phan": [
+        {
+          "ma_mon": "003098",
+          "ten_mon": "Thực tập doanh nghiệp",
+          "ma_hoc_phan": "4203003098",
+          "loai": "bat_buoc",
+          "so_tc": 5,
+          "so_tiet_lt": 0,
+          "so_tiet_th": 150,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        },
+        {
+          "ma_mon": "014170",
+          "ten_mon": "Khóa luận tốt nghiệp",
+          "ma_hoc_phan": "4203014170",
+          "loai": "bat_buoc",
+          "so_tc": 8,
+          "so_tiet_lt": 0,
+          "so_tiet_th": 240,
+          "khong_tinh_gpa": false,
+          "dieu_kien": [],
+          "loai_dieu_kien": null
+        }
+      ]
+    }
+  ]
+}
