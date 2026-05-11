@@ -3,30 +3,30 @@
 > File này được Claude Code tự cập nhật. Đầu phiên đọc để có context, cuối task ghi lại.
 > Quy ước cập nhật: xem `CLAUDE.md` mục 7.
 
-**Cập nhật lần cuối:** 2026-05-11 (Hoàn tất Giai đoạn 2)
+**Cập nhật lần cuối:** 2026-05-11 (Hoàn tất Giai đoạn 3)
 
 ---
 
 ## Giai đoạn hiện tại
 
-**Giai đoạn 2 — Tăng cường Dữ liệu** ✅ HOÀN THÀNH
+**Giai đoạn 3 — Embedding** ✅ HOÀN THÀNH
 
 ---
 
 ## Đang làm
 
-- (Giai đoạn 2 hoàn tất. Sẵn sàng cho Giai đoạn 3 — Embedding.)
+- (Giai đoạn 3 hoàn tất. Sẵn sàng cho Giai đoạn 4 — Mô hình học sâu (M1–M5).)
 
 ---
 
-## Sắp làm (Giai đoạn 3 — Embedding)
+## Sắp làm (Giai đoạn 4 — Mô hình học sâu)
 
-1. Fine-tune PhoBERT-base-v2 với contrastive loss trên QA pairs.
-2. Fine-tune multilingual-E5-base với hard negatives (từ `negative_samples`).
-3. Train GCN/GAT trên prerequisite graph (cần cài torch-geometric — sẽ hỏi user).
-4. Xây dựng hybrid embedding (late fusion text + graph).
-5. Đánh giá tất cả phương án trên test set 500 query-doc pairs.
-6. Chọn embedding tốt nhất build FAISS index.
+1. M1: Train LSTM/GRU baseline sequence recommendation.
+2. M2: Train Transformer bi-encoder dense retrieval (có thể tận dụng E5 fine-tuned đã có).
+3. M3: Train cross-attention reranker trên top-K candidates.
+4. M4: Implement GNN + Transformer fusion (tận dụng GCN đã có).
+5. M5: LoRA fine-tune Vistral-7B / Qwen2.5-7B (cần hỏi user về model + dataset).
+6. Ablation study: so sánh tất cả mô hình.
 
 ---
 
@@ -55,6 +55,39 @@
 
 Phân bố theo ngành cân bằng (~21k/ngành cho cả 5 ngành CS/IS/DS/SE/IT).
 
+### Embedding (Giai đoạn 3)
+
+| Loại | File / Dir | Kích thước |
+|---|---|---|
+| Corpus | `data/embeddings/corpus.jsonl` | 438 docs (1/môn, gộp 5 ngành) |
+| Test set hold-out | `data/embeddings/test.jsonl` | 500 pairs (cân bằng 100/ngành) |
+| Train pool positives | `data/embeddings/train_pool.jsonl` | 79.500 |
+| Hard negatives | `data/embeddings/hard_negatives.jsonl` | 5.958 |
+| Train pairs (PhoBERT) | `data/embeddings/train_pairs.jsonl` | 60.000 cặp |
+| Train triplets (E5) | `data/embeddings/train_triplets.jsonl` | 60.000 triplet |
+| PhoBERT fine-tuned | `data/embeddings/phobert_finetuned/` | 517 MB |
+| E5 fine-tuned | `data/embeddings/e5_finetuned/` | 1.1 GB |
+| GCN node embedding | `data/embeddings/gnn_gcn/` | 438 × 128 |
+| GAT node embedding | `data/embeddings/gnn_gat/` | 438 × 128 |
+| FAISS index (E5) | `data/embeddings/faiss/` | 1.5 MB |
+| Báo cáo so sánh | `data/embeddings/EMBEDDING_COMPARISON.md` | — |
+
+### Kết quả đánh giá (test 500 pairs)
+
+| Method | R@1 | R@5 | R@10 | MRR | NDCG@10 |
+|---|---:|---:|---:|---:|---:|
+| **hybrid (E5+GCN α=0.85)** | 0.664 | 0.944 | **0.990** | 0.779 | 0.752 |
+| **e5 fine-tuned** ★ | **0.668** | 0.964 | 0.988 | **0.786** | **0.761** |
+| phobert fine-tuned | 0.642 | 0.964 | 0.988 | 0.775 | 0.747 |
+| gnn_gcn | 0.018 | 0.084 | 0.158 | 0.066 | 0.031 |
+| e5_base_pretrained (baseline) | 0.016 | 0.054 | 0.064 | 0.044 | 0.012 |
+| gnn_gat | 0.026 | 0.036 | 0.050 | 0.044 | 0.019 |
+
+★ Đã build FAISS index với E5 fine-tuned (Recall@10 chỉ kém hybrid 0.2%
+nhưng đơn giản hơn — 1 model, không cần PCA bridge).
+
+Fine-tune E5 cải thiện **+92.4% Recall@10** so với pretrained baseline.
+
 ---
 
 ## Checklist Giai đoạn 1 — ✅ HOÀN THÀNH
@@ -78,6 +111,15 @@ Phân bố theo ngành cân bằng (~21k/ngành cho cả 5 ngành CS/IS/DS/SE/IT
 - [x] Validate chất lượng: 0 lỗi schema, 0 duplicate ID, ngành cân bằng
 - [x] Tổng kết: 106.958 samples (mục tiêu ≥85k) ✅ vượt 25%
 
+## Checklist Giai đoạn 3 — ✅ HOÀN THÀNH
+
+- [x] Fine-tune PhoBERT-base-v2 với contrastive loss (60k pairs, 1 epoch, MultipleNegativesRankingLoss in-batch)
+- [x] Fine-tune multilingual-E5-base với hard negatives (60k triplets, 1 epoch, hard neg từ negative_sampling)
+- [x] Train GCN/GAT trên prerequisite graph (PhoBERT text-features init, link prediction self-supervised)
+- [x] Xây dựng hybrid embedding (late fusion E5 + GCN, α=0.85 sau khi sweep)
+- [x] Đánh giá 6 phương án (PhoBERT, E5, E5 pretrained baseline, GCN, GAT, Hybrid) trên test 500 pairs
+- [x] Chọn E5 fine-tuned build FAISS index (R@10 = 98.8%, MRR = 0.79)
+
 ---
 
 ## Phụ thuộc đã cài
@@ -95,12 +137,16 @@ Phân bố theo ngành cân bằng (~21k/ngành cho cả 5 ngành CS/IS/DS/SE/IT
 - `sentence-transformers>=2.2` — fine-tune embedding
 - `faiss-cpu>=1.7.4` — vector index
 
+### Giai đoạn 3 (cài 2026-05-11)
+- `torch-geometric==2.7.0` — GCN/GAT cho prerequisite graph
+
 ---
 
 ## Blockers & Câu hỏi cho user
 
-- ⏳ Sẽ cần cài `torch-geometric` / `dgl` cho GNN ở Giai đoạn 3 (M4). Sẽ hỏi khi đến.
-- ⏳ Chưa quyết định LLM cuối cùng cho generation: Vistral-7B vs Qwen2.5-7B-Instruct (Giai đoạn 4).
+- ✅ Đã cài `torch-geometric==2.7.0` cho GCN/GAT (2026-05-11, hoạt động tốt với CUDA 12.8).
+- ⏳ Chưa quyết định LLM cuối cùng cho M5: Vistral-7B vs Qwen2.5-7B-Instruct (Giai đoạn 4). Sẽ hỏi khi đến.
+- ⏳ Phương pháp Hybrid hiện dùng PCA bridge text→GNN. Nếu hiệu quả không tốt ở Giai đoạn 5 sẽ thay bằng cross-encoder reranking.
 - ✅ Đã xác nhận: KHÔNG dùng API LLM (yêu cầu giáo viên) → đã loại synthetic QA generation.
 
 ---
@@ -120,3 +166,12 @@ Phân bố theo ngành cân bằng (~21k/ngành cho cả 5 ngành CS/IS/DS/SE/IT
 - 2026-05-11: Viết `src/data/augmentation/cf_augment.py` — Truncated SVD trên ma trận (SV × Môn), sample latent Gaussian quanh population để sinh virtual student, reconstruct grade → profile. 6000 virtual/ngành × 5 × 2 sample/profile = 60.000 samples.
 - 2026-05-11: Viết `src/data/augmentation/negative_sampler.py` — sinh 5 loại vi phạm: prereq, vượt TC max, dưới TC min, sai thứ tự HK, học lại điểm cao. 600/loại × 5 loại × 5 ngành = 14.958 samples.
 - 2026-05-11: Viết `src/data/augmentation/validate_augmented.py` — check schema, dedup, hợp nhất tất cả → `data/augmented/ALL_samples.jsonl`. Kết quả: **106.958 samples, 0 lỗi schema, 0 duplicate ID, ngành cân bằng (~21k/ngành)**. Vượt mục tiêu 85k của project_instructions.md mục 10. Giai đoạn 2 HOÀN THÀNH.
+- 2026-05-11: Cài `torch-geometric==2.7.0` (xác nhận tương thích torch 2.12 dev + CUDA 12.8). Bắt đầu Giai đoạn 3.
+- 2026-05-11: Viết `src/embedding/build_corpus.py` — sinh 438 corpus doc (1/môn) + split test set 500 pairs cân bằng theo ngành (hold-out, không dùng training). Hợp nhất 5 ngành: chỉ giữ sample có ít nhất 1 doc_id hợp lệ trong corpus (loại 12k positive + 9k negative do CF augmentation sinh code không có trong curriculum).
+- 2026-05-11: Viết `src/embedding/prepare_training.py` — sinh 60k train_pairs (PhoBERT) + 60k train_triplets (E5 với hard negative cùng ngành).
+- 2026-05-11: Viết `src/embedding/text_embedder.py` — fine-tune `vinai/phobert-base-v2` và `intfloat/multilingual-e5-base` bằng MultipleNegativesRankingLoss. PhoBERT: 4m43s, loss 3.45→0.76. E5: 16m33s, loss 1.32→0.72. Cả 2 model lưu ở `data/embeddings/{phobert,e5}_finetuned/`.
+- 2026-05-11: Viết `src/embedding/graph_embedder.py` — train GCN/GAT 2-layer (init feature = PhoBERT embedding của text trong corpus, link prediction self-supervised với negative sampling). GCN/GAT đều train xong <2s, link-pred acc 76-84%. Output: `data/embeddings/gnn_{gcn,gat}/node_embeddings.npy`.
+- 2026-05-11: Viết `src/embedding/evaluator.py` — đánh giá 6 phương án trên test 500 pairs. Kết quả best: **E5 fine-tuned R@10=98.8%, MRR=0.786**. Fine-tune giúp E5 vọt từ 6.4% lên 98.8% R@10 (+92.4%). GNN standalone yếu (R@10 ~15%) vì query không có course code rõ ràng để leverage graph structure.
+- 2026-05-11: Viết `src/embedding/tune_hybrid_alpha.py` — sweep α cho hybrid E5+GCN. Best α=0.85 đạt R@10=99.0% (+0.2% vs E5 đơn lẻ), nhưng MRR/NDCG kém hơn E5 alone.
+- 2026-05-11: Viết `src/embedding/build_faiss_index.py` — build FAISS IndexFlatIP với E5 fine-tuned (438 docs × 768 dim, cosine via inner product). Output: `data/embeddings/faiss/{index.faiss, doc_ids.json, metadata.jsonl, config.json}`. Verify nhanh: query "Em ngành SE HK6, định hướng Web" trả về Lập trình mạng Qt, Lập trình phân tán Java/NET — semantically đúng.
+- 2026-05-11: Viết `src/embedding/compare_report.py` — sinh `data/embeddings/EMBEDDING_COMPARISON.md` tổng kết. Giai đoạn 3 HOÀN THÀNH.

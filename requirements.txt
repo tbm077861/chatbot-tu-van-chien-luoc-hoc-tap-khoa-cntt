@@ -14,6 +14,7 @@ torch>=2.1
 transformers>=4.35
 sentence-transformers>=2.2
 peft>=0.7
+torch-geometric>=2.7
 
 # Vector store / Retrieval
 faiss-cpu>=1.7.4
