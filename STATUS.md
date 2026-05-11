@@ -3,29 +3,29 @@
 > File này được Claude Code tự cập nhật. Đầu phiên đọc để có context, cuối task ghi lại.
 > Quy ước cập nhật: xem `CLAUDE.md` mục 7.
 
-**Cập nhật lần cuối:** 2026-05-11 (Hoàn tất Giai đoạn 3)
+**Cập nhật lần cuối:** 2026-05-11 (Đang làm Giai đoạn 4 — đã xong M1)
 
 ---
 
 ## Giai đoạn hiện tại
 
-**Giai đoạn 3 — Embedding** ✅ HOÀN THÀNH
+**Giai đoạn 4 — Mô hình học sâu** 🔄 ĐANG LÀM (M1 ✅)
 
 ---
 
 ## Đang làm
 
-- (Giai đoạn 3 hoàn tất. Sẵn sàng cho Giai đoạn 4 — Mô hình học sâu (M1–M5).)
+- M2: Transformer bi-encoder dense retrieval.
 
 ---
 
 ## Sắp làm (Giai đoạn 4 — Mô hình học sâu)
 
-1. M1: Train LSTM/GRU baseline sequence recommendation.
+1. ✅ M1: LSTM/GRU baseline sequence recommendation.
 2. M2: Train Transformer bi-encoder dense retrieval (có thể tận dụng E5 fine-tuned đã có).
 3. M3: Train cross-attention reranker trên top-K candidates.
 4. M4: Implement GNN + Transformer fusion (tận dụng GCN đã có).
-5. M5: LoRA fine-tune Vistral-7B / Qwen2.5-7B (cần hỏi user về model + dataset).
+5. M5: LoRA fine-tune Qwen2.5-7B-Instruct (đã chốt).
 6. Ablation study: so sánh tất cả mô hình.
 
 ---
@@ -120,6 +120,16 @@ Fine-tune E5 cải thiện **+92.4% Recall@10** so với pretrained baseline.
 - [x] Đánh giá 6 phương án (PhoBERT, E5, E5 pretrained baseline, GCN, GAT, Hybrid) trên test 500 pairs
 - [x] Chọn E5 fine-tuned build FAISS index (R@10 = 98.8%, MRR = 0.79)
 
+## Checklist Giai đoạn 4 — 🔄 ĐANG LÀM
+
+- [x] M1: Train LSTM baseline (10.68M params, 5 epochs, R@10=99.2%, MRR=0.805)
+- [x] M1: Train GRU variant để so sánh (10.09M params, 5 epochs, R@10=99.4%, MRR=0.801)
+- [ ] M2: Train bi-encoder Transformer, so sánh với M1
+- [ ] M3: Train cross-attention reranker
+- [ ] M4: Implement GNN + Transformer fusion
+- [ ] M5: LoRA fine-tune Qwen2.5-7B-Instruct (4-bit, RTX 5070 8GB)
+- [ ] Ablation study: so sánh tất cả mô hình
+
 ---
 
 ## Phụ thuộc đã cài
@@ -175,3 +185,5 @@ Fine-tune E5 cải thiện **+92.4% Recall@10** so với pretrained baseline.
 - 2026-05-11: Viết `src/embedding/tune_hybrid_alpha.py` — sweep α cho hybrid E5+GCN. Best α=0.85 đạt R@10=99.0% (+0.2% vs E5 đơn lẻ), nhưng MRR/NDCG kém hơn E5 alone.
 - 2026-05-11: Viết `src/embedding/build_faiss_index.py` — build FAISS IndexFlatIP với E5 fine-tuned (438 docs × 768 dim, cosine via inner product). Output: `data/embeddings/faiss/{index.faiss, doc_ids.json, metadata.jsonl, config.json}`. Verify nhanh: query "Em ngành SE HK6, định hướng Web" trả về Lập trình mạng Qt, Lập trình phân tán Java/NET — semantically đúng.
 - 2026-05-11: Viết `src/embedding/compare_report.py` — sinh `data/embeddings/EMBEDDING_COMPARISON.md` tổng kết. Giai đoạn 3 HOÀN THÀNH.
+- 2026-05-11: Bắt đầu Giai đoạn 4. Chốt: M1→M5 tuần tự; M5 dùng Qwen2.5-7B-Instruct + LoRA 4-bit; tận dụng split 79.5k/5.9k của Giai đoạn 3. File: `src/models/__init__.py`.
+- 2026-05-11: Viết `src/models/lstm_recommender.py` — M1 baseline. BiLSTM/BiGRU 2 lớp (10.68M / 10.09M params) + course embedding table (438 lớp), CE loss full-softmax. PhoBERT tokenizer (subword) nhưng embedding init random. File: `src/models/lstm_recommender.py`. Output: `data/models/lstm_baseline/{lstm,gru}_{best.pt,results.json}`. Kết quả test 500 pairs: **LSTM R@10=99.2%, MRR=0.805**; **GRU R@10=99.4%, MRR=0.801**. Cả 2 vượt E5 fine-tuned (R@10=98.8%, MRR=0.786) — nhờ corpus nhỏ (438 môn) + course embedding table học bucket trực tiếp. Train ~85s/model trên RTX 5070.
