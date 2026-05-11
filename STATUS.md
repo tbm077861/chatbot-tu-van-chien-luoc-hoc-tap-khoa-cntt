@@ -3,19 +3,21 @@
 > File này được Claude Code tự cập nhật. Đầu phiên đọc để có context, cuối task ghi lại.
 > Quy ước cập nhật: xem `CLAUDE.md` mục 7.
 
-**Cập nhật lần cuối:** 2026-05-11 (Đang làm Giai đoạn 4 — đã xong M1)
+**Cập nhật lần cuối:** 2026-05-11 (Giai đoạn 4 — đã xong M1–M4, chờ M5 chạy Kaggle)
 
 ---
 
 ## Giai đoạn hiện tại
 
-**Giai đoạn 4 — Mô hình học sâu** 🔄 ĐANG LÀM (M1 ✅)
+**Giai đoạn 4 — Mô hình học sâu** 🔄 ĐANG LÀM (M1 ✅, M2 ✅, M3 ✅, M4 ✅)
 
 ---
 
 ## Đang làm
 
-- M2: Transformer bi-encoder dense retrieval.
+- M5: User chạy Kaggle T4×2 fine-tune Qwen2.5-7B-Instruct + LoRA theo
+  notebook `notebooks/kaggle_m5_qwen_lora.py` (~3.5–4.5 giờ training + eval).
+- Chờ M5 xong → ablation study tổng hợp M1–M5.
 
 ---
 
@@ -120,15 +122,16 @@ Fine-tune E5 cải thiện **+92.4% Recall@10** so với pretrained baseline.
 - [x] Đánh giá 6 phương án (PhoBERT, E5, E5 pretrained baseline, GCN, GAT, Hybrid) trên test 500 pairs
 - [x] Chọn E5 fine-tuned build FAISS index (R@10 = 98.8%, MRR = 0.79)
 
-## Checklist Giai đoạn 4 — 🔄 ĐANG LÀM
+## Checklist Giai đoạn 4 — 🔄 ĐANG LÀM (M5 đang chạy Kaggle)
 
 - [x] M1: Train LSTM baseline (10.68M params, 5 epochs, R@10=99.2%, MRR=0.805)
 - [x] M1: Train GRU variant để so sánh (10.09M params, 5 epochs, R@10=99.4%, MRR=0.801)
-- [ ] M2: Train bi-encoder Transformer, so sánh với M1
-- [ ] M3: Train cross-attention reranker
-- [ ] M4: Implement GNN + Transformer fusion
-- [ ] M5: LoRA fine-tune Qwen2.5-7B-Instruct (4-bit, RTX 5070 8GB)
-- [ ] Ablation study: so sánh tất cả mô hình
+- [x] M2: Train bi-encoder Transformer from-scratch (9.07M params, 5 epochs, R@10=99.4%, MRR=0.793)
+- [x] M3: Train cross-attention reranker PhoBERT-base-v2 (135M, 30k triplets × 2 epochs, pair_acc=0.93). Sau rerank top-20: R@10=99.8% (+0.010 vs E5), R@1=0.654 (−0.014 vs E5), MRR=0.783 (−0.0035)
+- [x] M4: GNN+Transformer learned fusion (1.12M trainable, cached E5+GCN, 10 epochs trong 12s)
+- [x] M4 ablation: with_gnn R@1=0.700 vs no_gnn R@1=0.706 — GNN không đóng góp đáng kể (graph prereq quá thưa)
+- [ ] M5: LoRA fine-tune Qwen2.5-7B-Instruct trên Kaggle T4×2 (user đang chạy)
+- [ ] Ablation study: so sánh tất cả mô hình (chờ M5)
 
 ---
 
@@ -187,3 +190,8 @@ Fine-tune E5 cải thiện **+92.4% Recall@10** so với pretrained baseline.
 - 2026-05-11: Viết `src/embedding/compare_report.py` — sinh `data/embeddings/EMBEDDING_COMPARISON.md` tổng kết. Giai đoạn 3 HOÀN THÀNH.
 - 2026-05-11: Bắt đầu Giai đoạn 4. Chốt: M1→M5 tuần tự; M5 dùng Qwen2.5-7B-Instruct + LoRA 4-bit; tận dụng split 79.5k/5.9k của Giai đoạn 3. File: `src/models/__init__.py`.
 - 2026-05-11: Viết `src/models/lstm_recommender.py` — M1 baseline. BiLSTM/BiGRU 2 lớp (10.68M / 10.09M params) + course embedding table (438 lớp), CE loss full-softmax. PhoBERT tokenizer (subword) nhưng embedding init random. File: `src/models/lstm_recommender.py`. Output: `data/models/lstm_baseline/{lstm,gru}_{best.pt,results.json}`. Kết quả test 500 pairs: **LSTM R@10=99.2%, MRR=0.805**; **GRU R@10=99.4%, MRR=0.801**. Cả 2 vượt E5 fine-tuned (R@10=98.8%, MRR=0.786) — nhờ corpus nhỏ (438 môn) + course embedding table học bucket trực tiếp. Train ~85s/model trên RTX 5070.
+- 2026-05-11: Viết `src/models/transformer_retriever.py` — M2 bi-encoder Transformer from-scratch (9.07M params, 4 layers, d=128, h=4). Cùng training scheme với M1 (CE 438 lớp, PhoBERT tokenizer, embedding init random) để so sánh fair. 5 epochs trong 80s. Kết quả: **R@10=99.4%, MRR=0.793**. Kết luận: với corpus nhỏ và full-softmax CE, kiến trúc encoder (LSTM vs Transformer) không khác biệt nhiều — signal chính đến từ course embedding table.
+- 2026-05-11: Viết `src/models/cross_reranker.py` — M3 cross-attention reranker. Fine-tune PhoBERT-base-v2 (135M params) làm cross-encoder với pairwise hinge loss (margin=0.3). Train 30k triplets × 2 epochs trên RTX 5070, pair_acc 0.83→0.93 (15 phút). Two-stage eval: E5 retrieve top-20 → cross-encoder rescore. Kết quả: R@10=99.8% (+0.01), R@1=0.654 (−0.014), MRR=0.783 (−0.0035), NDCG@10=0.740 (−0.021). M3 chỉ cải thiện R@10, làm giảm các metric khác — do test gold có ~5 positive/query (CF-derived), reranker pairwise có thể đẩy "alternative positive" xuống.
+- 2026-05-11: Viết `src/models/gnn_transformer.py` — M4 learned linear fusion bi-encoder. Doc side: concat E5(text 768) + GCN(graph 128) → MLP(896→256). Query side: MLP(E5 768→256). Cached E5 embeddings (`data/embeddings/cache_e5/`) → 10 epochs train trong 12s, chỉ 1.12M trainable params. Kết quả: **R@1=0.700, R@10=99.6%, MRR=0.807**. Ablation `--no-gnn` (zero-mask GCN portion): R@1=0.706, MRR=0.811 — **hơi tốt hơn với_gnn**. Kết luận: GCN không thêm signal hữu ích, lift của M4 đến từ learned MLP projection trên E5 embedding, không phải GNN. Lý do: prerequisite graph quá thưa (438 node, ~125 edge — chỉ 0.06% mật độ).
+- 2026-05-11: Viết `src/models/prepare_sft_data.py` — chuẩn bị data SFT cho M5. Gộp train_pairs theo query → mỗi sample list 5 positive doc_id, format thành Qwen chat template (system/user/assistant). Response template: "1. **Ten mon** (mã XXXXXX, N TC, bat_buoc/tu_chon)" (parse-friendly). Output: 20.000 train + 500 test ở `data/sft/{qwen_sft_train,qwen_sft_test,corpus}.jsonl` (~22 MB), zip thành `ck-nlp-m5-sft.zip` (1 MB) để upload Kaggle.
+- 2026-05-11: Viết `notebooks/kaggle_m5_qwen_lora.py` — Kaggle T4×2 notebook code (13 cell, định dạng `# %%`). Cấu hình: Qwen2.5-7B-Instruct 4-bit NF4 + LoRA r=16 alpha=32 target=q/k/v/o/gate/up/down_proj, fp16 + gradient checkpoint, 1 epoch 20k samples, effective batch=16. Eval cell: generate 500 query → parse regex "mã (\d{6})" → map doc_id → metrics. Hand-off cho user chạy Kaggle.
