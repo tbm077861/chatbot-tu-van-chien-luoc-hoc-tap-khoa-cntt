@@ -1,0 +1,148 @@
+{
+  "nguon": "Quy chế đào tạo Trường Đại học Công nghiệp TP.HCM (IUH)",
+  "dang_ky_hoc_phan": {
+    "tc_min": 12,
+    "tc_max": 30
+  },
+  "canh_bao_hoc_tap": {
+    "tc_no_max": 24,
+    "ti_le_khong_dat_max": 0.5,
+    "dtbhl_min_hk1": 0.8,
+    "dtbhl_min_hk_tiep": 1.0,
+    "dtbhltl_nam1": 1.2,
+    "dtbhltl_nam2": 1.4,
+    "dtbhltl_nam3": 1.6,
+    "dtbhltl_nam4_plus": 1.8,
+    "so_lan_canh_bao_lien_tiep_bi_thoi_hoc": 2
+  },
+  "dieu_kien_tot_nghiep": {
+    "gpa_min_thang4": 2.0,
+    "dieu_kien": [
+      "Tích lũy đủ học phần và số tín chỉ theo CTĐT",
+      "Điểm trung bình tích lũy toàn khóa >= 2.00 (thang 4)",
+      "Không bị truy cứu trách nhiệm hình sự hoặc đình chỉ học tập",
+      "Đạt chuẩn đầu ra ngoại ngữ và công nghệ thông tin"
+    ]
+  },
+  "bang_quy_doi_diem": [
+    {
+      "thu_tu": 1,
+      "thang10_tu": 9.0,
+      "thang10_den": 10.0,
+      "thang4": 4.0,
+      "diem_chu": "A+"
+    },
+    {
+      "thu_tu": 2,
+      "thang10_tu": 8.5,
+      "thang10_den": 8.9,
+      "thang4": 3.8,
+      "diem_chu": "A"
+    },
+    {
+      "thu_tu": 3,
+      "thang10_tu": 8.0,
+      "thang10_den": 8.4,
+      "thang4": 3.5,
+      "diem_chu": "B+"
+    },
+    {
+      "thu_tu": 4,
+      "thang10_tu": 7.0,
+      "thang10_den": 7.9,
+      "thang4": 3.0,
+      "diem_chu": "B"
+    },
+    {
+      "thu_tu": 5,
+      "thang10_tu": 6.0,
+      "thang10_den": 6.9,
+      "thang4": 2.5,
+      "diem_chu": "C+"
+    },
+    {
+      "thu_tu": 6,
+      "thang10_tu": 5.5,
+      "thang10_den": 5.9,
+      "thang4": 2.0,
+      "diem_chu": "C"
+    },
+    {
+      "thu_tu": 7,
+      "thang10_tu": 5.0,
+      "thang10_den": 5.4,
+      "thang4": 1.5,
+      "diem_chu": "D+"
+    },
+    {
+      "thu_tu": 8,
+      "thang10_tu": 4.0,
+      "thang10_den": 4.9,
+      "thang4": 1.0,
+      "diem_chu": "D"
+    },
+    {
+      "thu_tu": 9,
+      "thang10_tu": 0.0,
+      "thang10_den": 3.9,
+      "thang4": 0.0,
+      "diem_chu": "F"
+    }
+  ],
+  "xep_loai_hoc_luc": [
+    {
+      "diem_tu": 3.6,
+      "diem_den": 4.0,
+      "xep_loai": "Xuất sắc"
+    },
+    {
+      "diem_tu": 3.2,
+      "diem_den": 3.59,
+      "xep_loai": "Giỏi"
+    },
+    {
+      "diem_tu": 2.5,
+      "diem_den": 3.19,
+      "xep_loai": "Khá"
+    },
+    {
+      "diem_tu": 2.0,
+      "diem_den": 2.49,
+      "xep_loai": "Trung bình"
+    },
+    {
+      "diem_tu": 0.0,
+      "diem_den": 1.99,
+      "xep_loai": "Kém"
+    }
+  ],
+  "hoc_phan_dieu_kien": {
+    "khong_tinh_gpa": [
+      "Giáo dục Thể chất",
+      "Giáo dục Quốc phòng và An ninh",
+      "Chứng chỉ Tiếng Anh",
+      "Chứng chỉ Tin học"
+    ],
+    "ghi_chu": "Các học phần này chỉ yêu cầu đạt (P/F), không tính vào điểm trung bình tích lũy (ĐTBCTL)."
+  },
+  "loai_dieu_kien_hoc_phan": {
+    "hoc_truoc": {
+      "ky_hieu": "a",
+      "mo_ta": "Phải đăng ký và học học phần A ở học kỳ trước đó (học hết nội dung, tham gia đánh giá, nhưng có thể chưa đạt)."
+    },
+    "tien_quyet": {
+      "ky_hieu": "b",
+      "mo_ta": "Phải đăng ký và học hoàn tất (đạt kết quả) học phần A trước khi được đăng ký học phần B."
+    },
+    "song_hanh": {
+      "ky_hieu": "c",
+      "mo_ta": "Sinh viên đã đăng ký học phần A; được phép học B đồng thời hoặc sau A."
+    }
+  },
+  "hoc_lai_va_cai_thien": {
+    "hoc_lai_bat_buoc": "Học phần bắt buộc điểm F → phải đăng ký học lại trong các HK tiếp theo cho đến khi đạt.",
+    "hoc_lai_tu_chon": "Học phần tự chọn điểm F → học lại môn đó hoặc đổi sang môn tự chọn khác cùng nhóm tự chọn, cùng học kỳ trong kế hoạch đào tạo.",
+    "cai_thien_diem": "Sinh viên có môn đạt điểm A, B+, B, C+, C, D+, D được phép đăng ký học lại để cải thiện điểm.",
+    "tinh_diem_tu_chon": "Sinh viên có thể đăng ký nhiều môn tự chọn hơn yêu cầu; hệ thống lấy các môn có điểm cao nhất để tính tích lũy."
+  }
+}

@@ -196,7 +196,7 @@ def check_id(df):
     good = ids[ids.str.match(r"^\d{7}$")]
     if len(good) > 0:
         years = good.str[:2].astype(int)
-        bad_year = good[(years < 16) | (years > 19)]
+        bad_year = good[(years < 16) | (years > 20)]
         if len(bad_year) > 0:
             warnings.append(f"ID năm lạ ({len(bad_year)} dòng ngoài 2016–2019)")
 
