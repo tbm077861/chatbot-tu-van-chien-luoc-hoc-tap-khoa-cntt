@@ -3,21 +3,24 @@
 > File này được Claude Code tự cập nhật. Đầu phiên đọc để có context, cuối task ghi lại.
 > Quy ước cập nhật: xem `CLAUDE.md` mục 7.
 
-**Cập nhật lần cuối:** 2026-05-11 (Giai đoạn 4 — đã xong M1–M4, chờ M5 chạy Kaggle)
+**Cập nhật lần cuối:** 2026-05-12 (Giai đoạn 4 ✅ HOÀN THÀNH — sẵn sàng vào Giai đoạn 5)
 
 ---
 
 ## Giai đoạn hiện tại
 
-**Giai đoạn 4 — Mô hình học sâu** 🔄 ĐANG LÀM (M1 ✅, M2 ✅, M3 ✅, M4 ✅)
+**Giai đoạn 5 — RAG Pipeline** 🔜 SẮP BẮT ĐẦU (session mới)
+
+Giai đoạn 4 đã xong M1, M2, M3, M4, M5. Bảng tổng kết ở mục "Kết quả Giai đoạn 4" bên dưới.
 
 ---
 
 ## Đang làm
 
-- M5: User chạy Kaggle T4×2 fine-tune Qwen2.5-7B-Instruct + LoRA theo
-  notebook `notebooks/kaggle_m5_qwen_lora.py` (~3.5–4.5 giờ training + eval).
-- Chờ M5 xong → ablation study tổng hợp M1–M5.
+- Chuyển session mới để bắt đầu **Giai đoạn 5 — RAG Pipeline**.
+- Kiến trúc đã chốt sau khi tổng kết M1–M5:
+  * **M4 (GNN+Transformer)** làm retriever (R@10=99.8%, R@1=70.6%).
+  * **M5 (Qwen2.5-7B LoRA)** làm generator (response tự nhiên, giải thích lý do).
 
 ---
 
@@ -122,7 +125,7 @@ Fine-tune E5 cải thiện **+92.4% Recall@10** so với pretrained baseline.
 - [x] Đánh giá 6 phương án (PhoBERT, E5, E5 pretrained baseline, GCN, GAT, Hybrid) trên test 500 pairs
 - [x] Chọn E5 fine-tuned build FAISS index (R@10 = 98.8%, MRR = 0.79)
 
-## Checklist Giai đoạn 4 — 🔄 ĐANG LÀM (M5 đang chạy Kaggle)
+## Checklist Giai đoạn 4 — ✅ HOÀN THÀNH
 
 - [x] M1: Train LSTM baseline (10.68M params, 5 epochs, R@10=99.2%, MRR=0.805)
 - [x] M1: Train GRU variant để so sánh (10.09M params, 5 epochs, R@10=99.4%, MRR=0.801)
@@ -130,8 +133,33 @@ Fine-tune E5 cải thiện **+92.4% Recall@10** so với pretrained baseline.
 - [x] M3: Train cross-attention reranker PhoBERT-base-v2 (135M, 30k triplets × 2 epochs, pair_acc=0.93). Sau rerank top-20: R@10=99.8% (+0.010 vs E5), R@1=0.654 (−0.014 vs E5), MRR=0.783 (−0.0035)
 - [x] M4: GNN+Transformer learned fusion (1.12M trainable, cached E5+GCN, 10 epochs trong 12s)
 - [x] M4 ablation: with_gnn R@1=0.700 vs no_gnn R@1=0.706 — GNN không đóng góp đáng kể (graph prereq quá thưa)
-- [ ] M5: LoRA fine-tune Qwen2.5-7B-Instruct trên Kaggle T4×2 (user đang chạy)
-- [ ] Ablation study: so sánh tất cả mô hình (chờ M5)
+- [x] M5: LoRA fine-tune Qwen2.5-7B-Instruct trên Kaggle T4×2 (1 epoch, 2500 steps, ~6.5h). LoRA adapter ~160MB. Eval v2 (sau khi fix SYSTEM prompt + regex + max_tokens): **R@1=0.640, R@5=0.682, MRR=0.661, NDCG@10=0.255**
+- [x] Ablation study: bảng tổng kết M1–M5 ở mục "Kết quả Giai đoạn 4" bên dưới
+
+---
+
+## Kết quả Giai đoạn 4 — Tổng kết M1–M5
+
+| Model | Params | R@1 | R@5 | R@10 | MRR | NDCG@10 | Vai trò sau cùng |
+|---|---|---:|---:|---:|---:|---:|---|
+| M1 BiLSTM | 10.7M | 0.666 | 0.958 | 0.992 | 0.805 | ~0.76 | Baseline |
+| M1 BiGRU | 10.1M | 0.668 | — | 0.994 | 0.801 | — | Baseline |
+| M2 Transformer scratch | 9.1M | 0.674 | 0.960 | 0.994 | 0.793 | — | Architecture exp |
+| M3 PhoBERT cross-rerank | 135M | 0.654 | 0.960 | 0.998 | 0.783 | 0.740 | (không dùng, làm giảm MRR) |
+| **M4 GNN+Transformer** ★ | 1.1M tr. | **0.706** | **0.972** | **0.998** | **0.811** | — | **🏆 Retriever (Stage 5)** |
+| **M5 Qwen 7B LoRA** | 7B + 40M LoRA | 0.640 | 0.682 | 0.682 | 0.661 | 0.255 | **💬 Generator (Stage 5)** |
+
+★ Best retriever.
+
+**Lưu ý M5**:
+- M5 metrics thấp hơn M1-M4 trên retrieval task vì model chỉ generate 1-2 môn/response (training data sau dedup phần nhiều có 1-2 unique positives/query).
+- Vai trò thực sự của M5 là **conversational generator**, không phải retriever → metrics retrieval không phản ánh đúng giá trị.
+- Eval v1 cũ (R@1=0.368) bị parse regex quá strict + SYSTEM prompt mismatch. Eval v2 sau fix tăng +27 điểm R@1.
+
+**Kiến trúc Stage 5 đã chốt**:
+```
+User query → M4 retrieve top-K → format context → M5 generate response
+```
 
 ---
 
@@ -195,3 +223,6 @@ Fine-tune E5 cải thiện **+92.4% Recall@10** so với pretrained baseline.
 - 2026-05-11: Viết `src/models/gnn_transformer.py` — M4 learned linear fusion bi-encoder. Doc side: concat E5(text 768) + GCN(graph 128) → MLP(896→256). Query side: MLP(E5 768→256). Cached E5 embeddings (`data/embeddings/cache_e5/`) → 10 epochs train trong 12s, chỉ 1.12M trainable params. Kết quả: **R@1=0.700, R@10=99.6%, MRR=0.807**. Ablation `--no-gnn` (zero-mask GCN portion): R@1=0.706, MRR=0.811 — **hơi tốt hơn với_gnn**. Kết luận: GCN không thêm signal hữu ích, lift của M4 đến từ learned MLP projection trên E5 embedding, không phải GNN. Lý do: prerequisite graph quá thưa (438 node, ~125 edge — chỉ 0.06% mật độ).
 - 2026-05-11: Viết `src/models/prepare_sft_data.py` — chuẩn bị data SFT cho M5. Gộp train_pairs theo query → mỗi sample list 5 positive doc_id, format thành Qwen chat template (system/user/assistant). Response template: "1. **Ten mon** (mã XXXXXX, N TC, bat_buoc/tu_chon)" (parse-friendly). Output: 20.000 train + 500 test ở `data/sft/{qwen_sft_train,qwen_sft_test,corpus}.jsonl` (~22 MB), zip thành `ck-nlp-m5-sft.zip` (1 MB) để upload Kaggle.
 - 2026-05-11: Viết `notebooks/kaggle_m5_qwen_lora.py` — Kaggle T4×2 notebook code (13 cell, định dạng `# %%`). Cấu hình: Qwen2.5-7B-Instruct 4-bit NF4 + LoRA r=16 alpha=32 target=q/k/v/o/gate/up/down_proj, fp16 + gradient checkpoint, 1 epoch 20k samples, effective batch=16. Eval cell: generate 500 query → parse regex "mã (\d{6})" → map doc_id → metrics. Hand-off cho user chạy Kaggle.
+- 2026-05-12: M5 train xong trên Kaggle T4×2 (~6.5h, 2500 steps, loss giảm 2.71→~0.1). Tuy nhiên **eval v1 metrics thấp bất thường**: R@1=R@5=R@10=MRR=0.368 — pattern này cho thấy model chỉ generate 1 prediction/query. Download `m5_qwen_lora.zip` về local (438MB, gồm adapter 161MB + tokenizer + checkpoint-2500).
+- 2026-05-12: Debug M5 v1 từ `sample_generations.json`: phát hiện 3 lỗi (1) SYSTEM prompt ở `generate_for_query` khác SYSTEM training → distribution shift, (2) parse regex `m[ãa]\s*(\d{6})` không bắt được mã môn khi model output `(003633)` không có "mã" prefix, (3) `max_new_tokens=256` có thể chưa đủ. Viết `notebooks/kaggle_m5_eval_only.py` để re-eval (skip train, load LoRA + run gen + metrics).
+- 2026-05-12: User upload `m5_lora_for_kaggle/` (LoRA adapter + tokenizer, 178MB) làm Kaggle dataset `ck-nlp-m5-lora`, chạy `kaggle_m5_eval_only.py` ~30 phút. **Eval v2 cải thiện rõ rệt**: R@1=0.640 (+0.272), R@5=0.682, R@10=0.682, MRR=0.661, NDCG@10=0.255. Pred avg len=1.45 (vs 1.0 trước), empty=0 (vs ~50% trước). Stats: chưa có query nào ≥5 môn vì training data nhiều query chỉ có 1-2 unique positives. **Giai đoạn 4 HOÀN THÀNH**.
