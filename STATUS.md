@@ -3,35 +3,34 @@
 > File này được Claude Code tự cập nhật. Đầu phiên đọc để có context, cuối task ghi lại.
 > Quy ước cập nhật: xem `CLAUDE.md` mục 7.
 
-**Cập nhật lần cuối:** 2026-05-12 (Giai đoạn 4 ✅ HOÀN THÀNH — sẵn sàng vào Giai đoạn 5)
+**Cập nhật lần cuối:** 2026-05-12 (Giai đoạn 5 ✅ HOÀN THÀNH — pipeline E2E chạy được)
 
 ---
 
 ## Giai đoạn hiện tại
 
-**Giai đoạn 5 — RAG Pipeline** 🔜 SẮP BẮT ĐẦU (session mới)
+**Giai đoạn 6 — Đánh giá & Triển khai** 🔜 SẮP BẮT ĐẦU
 
-Giai đoạn 4 đã xong M1, M2, M3, M4, M5. Bảng tổng kết ở mục "Kết quả Giai đoạn 4" bên dưới.
+Giai đoạn 5 đã xong: 11 file mới trong `src/retrieval/`, `src/generation/`, `src/evaluation/`, `src/rag_pipeline.py`. E2E test 100 query (stub) chạy 3.1s. Bảng kết quả ở mục "Kết quả Giai đoạn 5" bên dưới.
 
 ---
 
 ## Đang làm
 
-- Chuyển session mới để bắt đầu **Giai đoạn 5 — RAG Pipeline**.
-- Kiến trúc đã chốt sau khi tổng kết M1–M5:
-  * **M4 (GNN+Transformer)** làm retriever (R@10=99.8%, R@1=70.6%).
-  * **M5 (Qwen2.5-7B LoRA)** làm generator (response tự nhiên, giải thích lý do).
+- Sẵn sàng cho Giai đoạn 6: RAGAS eval (faithfulness, answer relevancy, context recall), Hit@K/MRR/NDCG@10, RAG vs non-RAG baseline, FastAPI backend, Streamlit UI.
+- Pending: chạy `--use-llm` mode để có metrics của M5 generator end-to-end (cần ~10 phút trên RTX 5070).
 
 ---
 
-## Sắp làm (Giai đoạn 4 — Mô hình học sâu)
+## Sắp làm (Giai đoạn 6 — Đánh giá & Triển khai)
 
-1. ✅ M1: LSTM/GRU baseline sequence recommendation.
-2. M2: Train Transformer bi-encoder dense retrieval (có thể tận dụng E5 fine-tuned đã có).
-3. M3: Train cross-attention reranker trên top-K candidates.
-4. M4: Implement GNN + Transformer fusion (tận dụng GCN đã có).
-5. M5: LoRA fine-tune Qwen2.5-7B-Instruct (đã chốt).
-6. Ablation study: so sánh tất cả mô hình.
+1. Chạy `python -m src.evaluation.rag_e2e --n 100 --use-llm` để có metrics M5 generator E2E.
+2. So sánh có/không reranker (`--rerank` flag).
+3. Implement RAGAS eval (faithfulness, answer relevancy, context recall, context precision).
+4. So sánh RAG (full pipeline) vs non-RAG baseline (chỉ Qwen-7B base + LoRA, không retrieval).
+5. FastAPI backend ở `api/main.py` (expose `pipeline.answer()`).
+6. Streamlit UI ở `frontend/app.py`.
+7. Thu thập 50 case manual để đánh giá user satisfaction.
 
 ---
 
@@ -125,6 +124,15 @@ Fine-tune E5 cải thiện **+92.4% Recall@10** so với pretrained baseline.
 - [x] Đánh giá 6 phương án (PhoBERT, E5, E5 pretrained baseline, GCN, GAT, Hybrid) trên test 500 pairs
 - [x] Chọn E5 fine-tuned build FAISS index (R@10 = 98.8%, MRR = 0.79)
 
+## Checklist Giai đoạn 5 — ✅ HOÀN THÀNH
+
+- [x] Build FAISS + BM25 hybrid retrieval — `src/retrieval/{dense_retriever.py, bm25_retriever.py, hybrid_retriever.py}` (RRF fusion k=60, mặc định weights 1.0/1.0)
+- [x] Implement constraint checker (prereq + TC) — `src/retrieval/constraint_checker.py` (load 5 graph + regulations.json, kiểm a/b prereq + song hành c + tổng TC 12-30/HK)
+- [x] Integrate reranker vào pipeline — `src/retrieval/reranker.py` (wrap M3 PhoBERT cross-encoder, mặc định OFF vì M3 làm giảm MRR theo Stage 4)
+- [x] Kết nối LLM generator — `src/generation/{generator.py, prompt_templates.py}` (Qwen2.5-7B 4-bit + LoRA local; có StubGenerator fallback không cần GPU)
+- [x] End-to-end test với 100 câu hỏi mẫu — `src/evaluation/rag_e2e.py` + metrics ở `src/evaluation/metrics.py` (cân bằng 20/ngành từ test set Stage 3)
+- [x] Orchestrator: `src/rag_pipeline.py` (RagPipeline.answer() trả RagResult với trace mọi bước)
+
 ## Checklist Giai đoạn 4 — ✅ HOÀN THÀNH
 
 - [x] M1: Train LSTM baseline (10.68M params, 5 epochs, R@10=99.2%, MRR=0.805)
@@ -163,6 +171,38 @@ User query → M4 retrieve top-K → format context → M5 generate response
 
 ---
 
+## Kết quả Giai đoạn 5 — E2E pipeline
+
+**File output**: `data/evaluation/rag_e2e_stub.json` (mode=stub, không cần GPU)
+
+**Pipeline**:
+```
+query → HybridRetriever (M4 dense + BM25 sparse, RRF k=60)
+      → ConstraintChecker (lọc thiếu prereq, cảnh báo TC ngoài [12,30])
+      → format_context (top-K valid → text block)
+      → Generator (Qwen-7B+LoRA *hoặc* Stub) → response
+      → parse_recommendations → [(doc_id, ...)]
+```
+
+**100 query cân bằng (20/ngành), stub mode, 3.1s tổng**:
+
+| Layer | R@1 | R@5 | R@10 | MRR | NDCG@10 |
+|---|---:|---:|---:|---:|---:|
+| Retrieval (sau constraint) | 0.340 | 0.820 | **0.970** | 0.525 | 0.437 |
+| Generation (parse từ Stub) | 0.340 | 0.820 | 0.820 | 0.503 | 0.294 |
+
+**Constraint metrics** (eval cold-start, không pass `completed`):
+- constraint_satisfaction_rate=0.00 (vì không có completed → môn từ HK4+ luôn thiếu prereq, là expected)
+- credit_load_validity=0.23 (avg_total_tc=37.1 — vượt vì 12 môn valid trung bình)
+- avg_valid=12.6, avg_violation=17.4
+
+**Quan sát**:
+- R@10 giảm từ 0.998 (M4 raw, Stage 4) → 0.970 (after constraint) — đúng theo dự kiến, constraint loại các môn thiếu prereq.
+- R@1 giảm mạnh (0.706 → 0.34) — pipeline ưu tiên ràng buộc hơn ranking thô. Khi user pass `completed`, R@1 sẽ tăng vì candidates valid xếp theo retriever score gốc.
+- Stub mode đủ để verify pipeline đúng nguyên lý. Cần chạy `--use-llm` (Qwen 4-bit) để có generation metrics thực.
+
+---
+
 ## Phụ thuộc đã cài
 
 ### Giai đoạn 1
@@ -180,6 +220,10 @@ User query → M4 retrieve top-K → format context → M5 generate response
 
 ### Giai đoạn 3 (cài 2026-05-11)
 - `torch-geometric==2.7.0` — GCN/GAT cho prerequisite graph
+
+### Giai đoạn 5
+- Tận dụng deps đã cài (rank-bm25, faiss-cpu, transformers, sentence-transformers, peft).
+- ⏳ **bitsandbytes** chưa cài — cần khi chạy `--use-llm` (4-bit Qwen). Đề xuất: `pip install bitsandbytes>=0.43 accelerate>=1.0`.
 
 ---
 
@@ -226,3 +270,8 @@ User query → M4 retrieve top-K → format context → M5 generate response
 - 2026-05-12: M5 train xong trên Kaggle T4×2 (~6.5h, 2500 steps, loss giảm 2.71→~0.1). Tuy nhiên **eval v1 metrics thấp bất thường**: R@1=R@5=R@10=MRR=0.368 — pattern này cho thấy model chỉ generate 1 prediction/query. Download `m5_qwen_lora.zip` về local (438MB, gồm adapter 161MB + tokenizer + checkpoint-2500).
 - 2026-05-12: Debug M5 v1 từ `sample_generations.json`: phát hiện 3 lỗi (1) SYSTEM prompt ở `generate_for_query` khác SYSTEM training → distribution shift, (2) parse regex `m[ãa]\s*(\d{6})` không bắt được mã môn khi model output `(003633)` không có "mã" prefix, (3) `max_new_tokens=256` có thể chưa đủ. Viết `notebooks/kaggle_m5_eval_only.py` để re-eval (skip train, load LoRA + run gen + metrics).
 - 2026-05-12: User upload `m5_lora_for_kaggle/` (LoRA adapter + tokenizer, 178MB) làm Kaggle dataset `ck-nlp-m5-lora`, chạy `kaggle_m5_eval_only.py` ~30 phút. **Eval v2 cải thiện rõ rệt**: R@1=0.640 (+0.272), R@5=0.682, R@10=0.682, MRR=0.661, NDCG@10=0.255. Pred avg len=1.45 (vs 1.0 trước), empty=0 (vs ~50% trước). Stats: chưa có query nào ≥5 môn vì training data nhiều query chỉ có 1-2 unique positives. **Giai đoạn 4 HOÀN THÀNH**.
+- 2026-05-12: Bắt đầu Giai đoạn 5. Chốt kiến trúc với user: (1) Retriever = M4 no_gnn + BM25 hybrid (RRF), (2) Reranker M3 = tuỳ chọn (mặc định OFF), (3) Generator = M5 Qwen-7B + LoRA local 4-bit.
+- 2026-05-12: Viết module `src/retrieval/`: `bm25_retriever.py` (BM25Okapi + tokenizer tiếng Việt thô), `dense_retriever.py` (FusionRetriever no_gnn + E5, doc embeddings precompute), `hybrid_retriever.py` (RRF fusion k=60), `constraint_checker.py` (load 5 graph + regulations.json, kiểm a/b/c prereq + TC 12-30), `reranker.py` (M3 PhoBERT cross-encoder optional).
+- 2026-05-12: Viết module `src/generation/`: `prompt_templates.py` (SYSTEM khớp Stage 4 training + USER template profile/context/question), `generator.py` (QwenGenerator 4-bit NF4 + LoRA, StubGenerator fallback, parse_recommendations regex).
+- 2026-05-12: Viết `src/rag_pipeline.py` orchestrator (RagPipeline.answer() → RagResult với trace retrieve/rerank/constraint/generate).
+- 2026-05-12: Viết `src/evaluation/{metrics.py, rag_e2e.py}` — eval 100 query cân bằng 20/ngành từ test set Stage 3. Chạy stub mode 3.1s. Retrieval R@10=0.97, R@1=0.34, MRR=0.525. **Giai đoạn 5 HOÀN THÀNH**.
