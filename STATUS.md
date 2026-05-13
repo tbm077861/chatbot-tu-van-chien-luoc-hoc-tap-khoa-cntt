@@ -24,13 +24,20 @@ Giai đoạn 5 đã xong: 11 file mới trong `src/retrieval/`, `src/generation/
 
 ## Sắp làm (Giai đoạn 6 — Đánh giá & Triển khai)
 
-1. Chạy `python -m src.evaluation.rag_e2e --n 100 --use-llm` để có metrics M5 generator E2E.
-2. So sánh có/không reranker (`--rerank` flag).
-3. Implement RAGAS eval (faithfulness, answer relevancy, context recall, context precision).
-4. So sánh RAG (full pipeline) vs non-RAG baseline (chỉ Qwen-7B base + LoRA, không retrieval).
-5. FastAPI backend ở `api/main.py` (expose `pipeline.answer()`).
-6. Streamlit UI ở `frontend/app.py`.
-7. Thu thập 50 case manual để đánh giá user satisfaction.
+**Chiến lược 2 môi trường (plan B):**
+- **Local**: retrieval + constraint + RAGAS + Hit@K (đã sẵn sàng).
+- **Kaggle T4×2 (16GB)**: M5 Qwen-7B generation only (tránh OOM 8GB local).
+
+**Thứ tự đề xuất**:
+1. Chạy `python -m src.evaluation.export_for_kaggle --n 100 --mode warm` → 2 file JSONL ở `data/kaggle_export/`.
+2. Viết Kaggle notebook (`notebooks/kaggle_m5_rag_eval.py`) — load Qwen-7B+LoRA, đọc 2 JSONL, generate cho cả RAG + no-RAG variant, lưu `predictions_{rag,norag}.jsonl`.
+3. Download predictions → viết aggregator local tính Hit@1/5, MRR, NDCG@10 cho cả 2 variant → bảng so sánh RAG vs non-RAG.
+4. RAGAS eval (faithfulness, answer relevancy, context recall, context precision) trên rag predictions.
+5. FastAPI backend `api/main.py` — expose `pipeline.answer()`; default StubGenerator (production sẽ gọi Qwen server riêng hoặc dùng API).
+6. Streamlit UI `frontend/app.py`.
+7. Thu thập 50 case manual đánh giá user satisfaction.
+
+**Optional**: nếu user fix torch CUDA + có VRAM ≥10GB, có thể dùng `--use-llm` local thay Kaggle.
 
 ---
 
@@ -184,22 +191,30 @@ query → HybridRetriever (M4 dense + BM25 sparse, RRF k=60)
       → parse_recommendations → [(doc_id, ...)]
 ```
 
-**100 query cân bằng (20/ngành), stub mode, 3.1s tổng**:
+**Eval 2 mode (cold/warm), 100 query cân bằng 20/ngành, stub generator, ~3s/mode**:
 
-| Layer | R@1 | R@5 | R@10 | MRR | NDCG@10 |
-|---|---:|---:|---:|---:|---:|
-| Retrieval (sau constraint) | 0.340 | 0.820 | **0.970** | 0.525 | 0.437 |
-| Generation (parse từ Stub) | 0.340 | 0.820 | 0.820 | 0.503 | 0.294 |
+| Layer | Mode | R@1 | R@5 | R@10 | MRR | NDCG@10 |
+|---|---|---:|---:|---:|---:|---:|
+| Retrieval | cold | 0.340 | 0.820 | **0.970** | 0.525 | 0.437 |
+| Retrieval | **warm** | **0.550** | **0.850** | 0.960 | **0.677** | **0.589** |
+| Generation | cold | 0.340 | 0.820 | 0.820 | 0.503 | 0.294 |
+| Generation | warm | 0.550 | 0.850 | 0.850 | 0.660 | 0.405 |
 
-**Constraint metrics** (eval cold-start, không pass `completed`):
-- constraint_satisfaction_rate=0.00 (vì không có completed → môn từ HK4+ luôn thiếu prereq, là expected)
-- credit_load_validity=0.23 (avg_total_tc=37.1 — vượt vì 12 môn valid trung bình)
-- avg_valid=12.6, avg_violation=17.4
+**Δ warm − cold**: R@1 **+0.21**, MRR **+0.15**, NDCG@10 **+0.15** — chứng minh constraint-aware pipeline hoạt động đúng khi có profile.
 
-**Quan sát**:
-- R@10 giảm từ 0.998 (M4 raw, Stage 4) → 0.970 (after constraint) — đúng theo dự kiến, constraint loại các môn thiếu prereq.
-- R@1 giảm mạnh (0.706 → 0.34) — pipeline ưu tiên ràng buộc hơn ranking thô. Khi user pass `completed`, R@1 sẽ tăng vì candidates valid xếp theo retriever score gốc.
-- Stub mode đủ để verify pipeline đúng nguyên lý. Cần chạy `--use-llm` (Qwen 4-bit) để có generation metrics thực.
+**So sánh với baseline Stage 4** (cùng test 500 pairs, nhưng không phải subset 100):
+- M4 raw R@10=0.998 → warm pipeline R@10=0.960 (giảm 0.038 do filter `da_hoan_thanh`).
+- M4 raw R@1=0.706 → warm pipeline R@1=0.550 (giảm 0.156 — cost của constraint filter; ưu tiên môn hợp lệ hơn cosine cao nhất).
+
+**Constraint metrics**:
+- `constraint_satisfaction_rate=0.00` cả 2 mode — vì test set có violations dạng `da_hoan_thanh` (warm) hoặc `thieu_prereq` (cold). Đây không phải tệ — pipeline báo rõ môn nào không hợp lệ.
+- `credit_load_validity≈0.23` — vì pipeline KHÔNG cắt top-K theo TC, chỉ cảnh báo. Giai đoạn 6 có thể thêm post-processing select-K-min-TC.
+
+**File output**:
+- `data/embeddings/test_with_profile.jsonl` — test set augmented với `hk_completed`, `hk_target`, `completed_ma_mon` (avg 50.2 môn/query).
+- `data/evaluation/rag_e2e_cold_stub.json` + `..._warm_stub.json`.
+
+**Khi `--use-llm`**: chưa chạy. Dự kiến generation NDCG@10 cao hơn stub (vì Qwen có thể recommend môn ngoài top-K context dựa trên training memory).
 
 ---
 
@@ -221,9 +236,10 @@ query → HybridRetriever (M4 dense + BM25 sparse, RRF k=60)
 ### Giai đoạn 3 (cài 2026-05-11)
 - `torch-geometric==2.7.0` — GCN/GAT cho prerequisite graph
 
-### Giai đoạn 5
+### Giai đoạn 5 (cài 2026-05-13)
 - Tận dụng deps đã cài (rank-bm25, faiss-cpu, transformers, sentence-transformers, peft).
-- ⏳ **bitsandbytes** chưa cài — cần khi chạy `--use-llm` (4-bit Qwen). Đề xuất: `pip install bitsandbytes>=0.43 accelerate>=1.0`.
+- `bitsandbytes==0.49.2` + `accelerate==1.13.0` — đã cài để dùng 4-bit Qwen.
+- ⚠️ **Phát hiện torch 2.11.0+cpu (CPU-only)** trong venv hiện tại — torch.cuda.is_available()=False dù driver NVIDIA 581.80 (CUDA 13) đã có RTX 5070 8GB. Stage 4 trước đó train được GPU (STATUS log), nên torch CUDA đã bị reinstall sang CPU. Hệ quả: không chạy được M5 4-bit local → đổi sang **plan B (Kaggle cho M5)**.
 
 ---
 
@@ -274,4 +290,7 @@ query → HybridRetriever (M4 dense + BM25 sparse, RRF k=60)
 - 2026-05-12: Viết module `src/retrieval/`: `bm25_retriever.py` (BM25Okapi + tokenizer tiếng Việt thô), `dense_retriever.py` (FusionRetriever no_gnn + E5, doc embeddings precompute), `hybrid_retriever.py` (RRF fusion k=60), `constraint_checker.py` (load 5 graph + regulations.json, kiểm a/b/c prereq + TC 12-30), `reranker.py` (M3 PhoBERT cross-encoder optional).
 - 2026-05-12: Viết module `src/generation/`: `prompt_templates.py` (SYSTEM khớp Stage 4 training + USER template profile/context/question), `generator.py` (QwenGenerator 4-bit NF4 + LoRA, StubGenerator fallback, parse_recommendations regex).
 - 2026-05-12: Viết `src/rag_pipeline.py` orchestrator (RagPipeline.answer() → RagResult với trace retrieve/rerank/constraint/generate).
-- 2026-05-12: Viết `src/evaluation/{metrics.py, rag_e2e.py}` — eval 100 query cân bằng 20/ngành từ test set Stage 3. Chạy stub mode 3.1s. Retrieval R@10=0.97, R@1=0.34, MRR=0.525. **Giai đoạn 5 HOÀN THÀNH**.
+- 2026-05-12: Viết `src/evaluation/{metrics.py, rag_e2e.py}` — eval 100 query cân bằng 20/ngành từ test set Stage 3. Chạy stub mode 3.1s. Retrieval R@10=0.97, R@1=0.34, MRR=0.525.
+- 2026-05-12: Phát hiện R@1 thấp do eval cold-start (không truyền `completed`). Triển khai phương án B+C: (B) viết `src/evaluation/augment_test_set.py` parse `hk_completed`/`hk_target` từ query bằng 5+3 regex pattern (match 500/500), tạo `data/embeddings/test_with_profile.jsonl` có thêm trường `completed_ma_mon` (avg 50.2 môn/query). (C) update `rag_e2e.py` thêm flag `--mode cold|warm|both`; warm mode truyền `completed` vào pipeline. Kết quả warm vs cold: R@1 +0.21 (0.34→0.55), MRR +0.15, NDCG@10 +0.15 — chứng minh constraint-aware pipeline đúng nguyên lý.
+- 2026-05-13: Cài bitsandbytes 0.49.2 + accelerate 1.13.0 để validate `--use-llm`. Phát hiện venv hiện tại có torch 2.11.0+**cpu** (không CUDA), RTX 5070 8GB. Plan A (reinstall torch CUDA) rủi ro break torch-geometric + 8GB VRAM chật cho Qwen-7B. Chốt **plan B**: local làm retrieval+constraint, Kaggle T4×2 chạy M5 generation (môi trường Stage 4 đã verify).
+- 2026-05-13: Viết `src/evaluation/export_for_kaggle.py` — chạy pipeline (use_llm=False) → export 2 JSONL `data/kaggle_export/{rag,norag}_inputs_warm.jsonl` với schema 11 trường (idx, query, nganh, hk_completed, hk_target, gold, retrieved_valid, context_doc_ids, system_prompt, user_message, variant). Test 20 queries OK: rag user_message=1176 chars (có context block), norag=420 chars (chỉ profile+question). Sẵn sàng upload Kaggle. **Giai đoạn 5 HOÀN THÀNH**.
