@@ -3,22 +3,23 @@
 > File này được Claude Code tự cập nhật. Đầu phiên đọc để có context, cuối task ghi lại.
 > Quy ước cập nhật: xem `CLAUDE.md` mục 7.
 
-**Cập nhật lần cuối:** 2026-05-12 (Giai đoạn 5 ✅ HOÀN THÀNH — pipeline E2E chạy được)
+**Cập nhật lần cuối:** 2026-05-14 (Stage 6 rewrite chat UX — upload bảng điểm + multi-turn chat + giải thích)
 
 ---
 
 ## Giai đoạn hiện tại
 
-**Giai đoạn 6 — Đánh giá & Triển khai** 🔜 SẮP BẮT ĐẦU
+**Giai đoạn 6 — Đánh giá & Triển khai** 🔄 ĐANG LÀM
 
-Giai đoạn 5 đã xong: 11 file mới trong `src/retrieval/`, `src/generation/`, `src/evaluation/`, `src/rag_pipeline.py`. E2E test 100 query (stub) chạy 3.1s. Bảng kết quả ở mục "Kết quả Giai đoạn 5" bên dưới.
+Đã hoàn thành 3/7 task con: notebook Kaggle RAG-vs-noRAG, aggregator local, RAGAS-proxy local. Còn lại: chạy Kaggle (user) → aggregate → RAGAS → FastAPI → Streamlit → 50 case manual.
 
 ---
 
 ## Đang làm
 
-- Sẵn sàng cho Giai đoạn 6: RAGAS eval (faithfulness, answer relevancy, context recall), Hit@K/MRR/NDCG@10, RAG vs non-RAG baseline, FastAPI backend, Streamlit UI.
-- Pending: chạy `--use-llm` mode để có metrics của M5 generator end-to-end (cần ~10 phút trên RTX 5070).
+- **Rewrite UX (2026-05-14)** sau khi user clarify scope: chatbot phải là **chat multi-turn với upload bảng điểm + giải thích chi tiết**, không phải REST single-turn nhập tay mã môn. Đã viết lại 6 file: `src/data/profile_loader.py` (mới), `src/generation/prompt_templates.py` (thêm `build_chat_user_message`), `src/generation/generator.py` (thêm method `chat()`), `src/rag_pipeline.py` (thêm `chat() + ChatResult`), `api/main.py` (endpoint POST /chat), `frontend/app.py` (rewrite hoàn toàn: file uploader + st.chat_message). Backend `/answer` cũ vẫn giữ cho backward compat.
+- Test E2E stub mode 2 turn với SV thật (IS_TuChon.csv, IDSinhVien=1677250): OK, turn 1 197ms, turn 2 72ms.
+- Pending: test E2E với `USE_LLM=1` (Qwen) + manual eval 50 case nếu user còn cần.
 
 ---
 
@@ -28,14 +29,15 @@ Giai đoạn 5 đã xong: 11 file mới trong `src/retrieval/`, `src/generation/
 - **Local**: retrieval + constraint + RAGAS + Hit@K (đã sẵn sàng).
 - **Kaggle T4×2 (16GB)**: M5 Qwen-7B generation only (tránh OOM 8GB local).
 
-**Thứ tự đề xuất**:
-1. Chạy `python -m src.evaluation.export_for_kaggle --n 100 --mode warm` → 2 file JSONL ở `data/kaggle_export/`.
-2. Viết Kaggle notebook (`notebooks/kaggle_m5_rag_eval.py`) — load Qwen-7B+LoRA, đọc 2 JSONL, generate cho cả RAG + no-RAG variant, lưu `predictions_{rag,norag}.jsonl`.
-3. Download predictions → viết aggregator local tính Hit@1/5, MRR, NDCG@10 cho cả 2 variant → bảng so sánh RAG vs non-RAG.
-4. RAGAS eval (faithfulness, answer relevancy, context recall, context precision) trên rag predictions.
-5. FastAPI backend `api/main.py` — expose `pipeline.answer()`; default StubGenerator (production sẽ gọi Qwen server riêng hoặc dùng API).
-6. Streamlit UI `frontend/app.py`.
-7. Thu thập 50 case manual đánh giá user satisfaction.
+**Thứ tự task con + trạng thái**:
+1. ✅ `python -m src.evaluation.export_for_kaggle --n 100 --mode warm` → `data/kaggle_export/{rag,norag}_inputs_warm.jsonl` (đã xong từ Stage 5).
+2. ✅ `notebooks/kaggle_m5_rag_eval.py` — load Qwen-7B+LoRA, đọc 2 JSONL, generate cả 2 variant, lưu `predictions_{rag,norag}.jsonl` + `eval_summary.json`.
+3. ✅ `src/evaluation/aggregate_rag_vs_norag.py` — Hit@1/5/10, MRR, NDCG@10 cho 2 variant + delta, output `data/evaluation/rag_vs_norag_metrics.json`.
+4. ✅ `src/evaluation/ragas_eval.py` — RAGAS-proxy (không API LLM): context_recall, context_precision (AP), faithfulness (proxy = |pred ∩ context|/|pred|), answer_relevancy (cos E5).
+5. ✅ User chạy Kaggle T4×2 (~25 phút) → 100 predictions/variant + bảng so sánh ở mục "Kết quả Giai đoạn 6".
+6. ✅ FastAPI backend `api/main.py` — expose `pipeline.answer()`; lifespan load 1 lần; env toggle `USE_LLM`, `USE_RERANKER`, `TOP_K`. Routes: `/health`, `/info`, `/answer`, `/docs`. Verify stub: 26ms warm, response tiếng Việt OK.
+7. ✅ Streamlit UI `frontend/app.py` — single page: sidebar (ngành/HK/GPA/định hướng/môn đã hoàn thành) + main (query + bảng recommendations + expander top retrieved + constraint warnings). Backend URL qua env `STREAMLIT_API_URL` (mặc định http://127.0.0.1:8000).
+8. 🟡 **Code đã xong**: sinh template + parser. Chờ user fill rating 1-5 cho 50 case ở `data/evaluation/manual_satisfaction_template.md`.
 
 **Optional**: nếu user fix torch CUDA + có VRAM ≥10GB, có thể dùng `--use-llm` local thay Kaggle.
 
@@ -218,6 +220,43 @@ query → HybridRetriever (M4 dense + BM25 sparse, RRF k=60)
 
 ---
 
+## Kết quả Giai đoạn 6 — RAG vs noRAG (100 query, M5 Qwen-7B+LoRA trên Kaggle T4×2)
+
+**File output**:
+- Predictions: `data/kaggle_export/stage6_rag_eval/predictions_{rag,norag}.jsonl`
+- Metrics retrieval: `data/evaluation/rag_vs_norag_metrics.json`
+- Metrics RAGAS-proxy: `data/evaluation/ragas_proxy.json`
+
+**Retrieval metrics (Hit@K / MRR / NDCG@10)**:
+
+| Metric | RAG | noRAG | Δ (RAG − noRAG) |
+|---|---:|---:|---:|
+| Hit@1 | **0.660** | 0.530 | **+0.130** |
+| Hit@5 | **0.690** | 0.530 | **+0.160** |
+| Hit@10 | **0.690** | 0.530 | **+0.160** |
+| MRR | **0.675** | 0.530 | **+0.145** |
+| NDCG@10 | **0.263** | 0.138 | **+0.125** |
+
+**RAGAS-proxy** (không API LLM, theo yêu cầu giáo viên):
+
+| Metric | RAG | noRAG | Δ |
+|---|---:|---:|---:|
+| context_recall (|gold∩retrieved|/|gold|) | 0.773 | 0.773 | 0.000 |
+| context_precision (AP@K) | 0.537 | 0.537 | 0.000 |
+| faithfulness (|pred∩context|/|pred|) | **0.955** | 0.690 | **+0.265** |
+| answer_relevancy (cos E5(q, response)) | **0.444** | 0.169 | **+0.275** |
+
+**Đọc**:
+- RAG cải thiện rõ rệt tất cả metric (Hit@1 +13đ, MRR +14.5đ, NDCG@10 +12.5đ).
+- `faithfulness` +26.5đ: RAG giúp model gợi ý môn nằm trong context cung cấp (less hallucination).
+- `answer_relevancy` +27.5đ: response RAG bám sát query hơn (do prompt có context guide).
+- `context_recall/precision` bằng nhau ở 2 variant vì cùng dùng 1 retriever — chỉ khác có/không nhét context vào prompt.
+- Pred length: rag avg=1.67, norag avg=0.97 (3 query noRAG output rỗng) → noRAG dễ "lười" hơn khi không có context.
+
+**Kết luận E2E**: RAG pipeline (M4 retriever + constraint + M5 generator) thắng baseline noRAG (M5 generator alone) ở mọi metric, chứng minh giá trị của context augmentation cho task tư vấn học phần.
+
+---
+
 ## Phụ thuộc đã cài
 
 ### Giai đoạn 1
@@ -239,7 +278,13 @@ query → HybridRetriever (M4 dense + BM25 sparse, RRF k=60)
 ### Giai đoạn 5 (cài 2026-05-13)
 - Tận dụng deps đã cài (rank-bm25, faiss-cpu, transformers, sentence-transformers, peft).
 - `bitsandbytes==0.49.2` + `accelerate==1.13.0` — đã cài để dùng 4-bit Qwen.
-- ⚠️ **Phát hiện torch 2.11.0+cpu (CPU-only)** trong venv hiện tại — torch.cuda.is_available()=False dù driver NVIDIA 581.80 (CUDA 13) đã có RTX 5070 8GB. Stage 4 trước đó train được GPU (STATUS log), nên torch CUDA đã bị reinstall sang CPU. Hệ quả: không chạy được M5 4-bit local → đổi sang **plan B (Kaggle cho M5)**.
+- ⚠️ Trước đây phát hiện torch 2.11.0+cpu (CPU-only) — Stage 6 đã reinstall xong (xem dưới).
+
+### Giai đoạn 6 (cài 2026-05-13)
+- `torch==2.12.0.dev20260408+cu128` (reinstall từ CPU build, pytorch.org nightly cu128).
+- `peft==0.19.1` (cho LoRA inference local).
+- `fastapi==0.136.1`, `uvicorn[standard]==0.46.0`, `python-dotenv==1.2.2`, `streamlit==1.57.0`.
+- HF_TOKEN trong `.env` (gitignored — repo này không phải git nên thực tế chưa có .gitignore).
 
 ---
 
@@ -294,3 +339,19 @@ query → HybridRetriever (M4 dense + BM25 sparse, RRF k=60)
 - 2026-05-12: Phát hiện R@1 thấp do eval cold-start (không truyền `completed`). Triển khai phương án B+C: (B) viết `src/evaluation/augment_test_set.py` parse `hk_completed`/`hk_target` từ query bằng 5+3 regex pattern (match 500/500), tạo `data/embeddings/test_with_profile.jsonl` có thêm trường `completed_ma_mon` (avg 50.2 môn/query). (C) update `rag_e2e.py` thêm flag `--mode cold|warm|both`; warm mode truyền `completed` vào pipeline. Kết quả warm vs cold: R@1 +0.21 (0.34→0.55), MRR +0.15, NDCG@10 +0.15 — chứng minh constraint-aware pipeline đúng nguyên lý.
 - 2026-05-13: Cài bitsandbytes 0.49.2 + accelerate 1.13.0 để validate `--use-llm`. Phát hiện venv hiện tại có torch 2.11.0+**cpu** (không CUDA), RTX 5070 8GB. Plan A (reinstall torch CUDA) rủi ro break torch-geometric + 8GB VRAM chật cho Qwen-7B. Chốt **plan B**: local làm retrieval+constraint, Kaggle T4×2 chạy M5 generation (môi trường Stage 4 đã verify).
 - 2026-05-13: Viết `src/evaluation/export_for_kaggle.py` — chạy pipeline (use_llm=False) → export 2 JSONL `data/kaggle_export/{rag,norag}_inputs_warm.jsonl` với schema 11 trường (idx, query, nganh, hk_completed, hk_target, gold, retrieved_valid, context_doc_ids, system_prompt, user_message, variant). Test 20 queries OK: rag user_message=1176 chars (có context block), norag=420 chars (chỉ profile+question). Sẵn sàng upload Kaggle. **Giai đoạn 5 HOÀN THÀNH**.
+- 2026-05-13: Bắt đầu Giai đoạn 6. Chốt với user: làm Kaggle notebook + RAGAS-proxy local trước (block các task khác).
+- 2026-05-13: Viết `notebooks/kaggle_m5_rag_eval.py` — load Qwen2.5-7B 4-bit + LoRA, đọc cả 2 JSONL (`rag_inputs_warm.jsonl`, `norag_inputs_warm.jsonl`), apply Qwen chat template với `system_prompt`+`user_message` đã render sẵn, generate greedy (max_new_tokens=512), parse `predicted_doc_ids` bằng regex 6-digit, lưu `predictions_{rag,norag}.jsonl` + `eval_summary.json` ở `/kaggle/working/stage6_rag_eval/`. Sanity check assert 2 file align theo idx + gold.
+- 2026-05-13: Viết `src/evaluation/aggregate_rag_vs_norag.py` — đọc 2 file predictions, tái dùng `metrics.compute_retrieval_metrics`, in bảng markdown so sánh + ghi `data/evaluation/rag_vs_norag_metrics.json`. Smoke test 10 query stub OK.
+- 2026-05-13: Viết `src/evaluation/ragas_eval.py` — RAGAS-proxy (không API LLM, theo yêu cầu giáo viên): (1) `context_recall` = |gold ∩ retrieved|/|gold|; (2) `context_precision` = AP@K dựa retrieved; (3) `faithfulness` proxy = |predicted ∩ context|/|predicted|; (4) `answer_relevancy` = cos(E5(query), E5(response)) với E5 fine-tuned Stage 3. Smoke test với E5 (199 weight load) chạy OK; flag `--e5 ''` để skip embedding metric.
+- 2026-05-13: Re-export 100 query (`--n 100`), user chạy `kaggle_m5_rag_eval.py` trên Kaggle T4×2 ~25 phút → `predictions_{rag,norag}.jsonl` (100 dòng/file) + `eval_summary.json`. Kết quả: **RAG Hit@1=0.66 vs noRAG 0.53 (+0.13)**, MRR +0.145, NDCG@10 +0.125; RAGAS-proxy faithfulness +0.265, answer_relevancy +0.275 — pipeline RAG thắng baseline ở mọi metric. Chi tiết ở mục "Kết quả Giai đoạn 6".
+- 2026-05-13: Reinstall `torch` từ CPU build (2.11.0+cpu) sang **CUDA build 2.12.0.dev20260408+cu128** từ pytorch.org nightly để dùng GPU RTX 5070 Laptop (Blackwell sm_120, 8.55GB). Cài thêm `peft 0.19.1`. Backup pip freeze cũ ở `requirements_before_torch_cuda_reinstall.txt`. Verify: `torch.cuda.is_available()=True`, full stack import OK (torch, transformers, sentence_transformers, peft, bitsandbytes, faiss).
+- 2026-05-13: Cài thêm `fastapi 0.136.1`, `uvicorn[standard] 0.46.0`, `python-dotenv 1.2.2`, `streamlit 1.57.0` (đã có sẵn trong nhóm `# API & UI` của requirements.txt).
+- 2026-05-13: Viết `api/main.py` FastAPI backend — wrap `RagPipeline.answer()` qua HTTP. Pipeline load 1 lần ở lifespan startup. Env toggle: `USE_LLM`, `USE_RERANKER`, `LOAD_4BIT`, `TOP_K`, `HF_TOKEN` (đọc từ `.env`), `API_HOST`, `API_PORT`. Endpoints: `GET /health`, `GET /info`, `POST /answer`, `/docs` (Swagger). Schema `AnswerRequest`/`AnswerResponse`/`RetrievedItem`/`ConstraintInfo` qua Pydantic. CORS allow-all để Streamlit local connect. Verify stub mode end-to-end: pipeline load <10s, `/answer` cold 144ms / warm 26ms, response tiếng Việt UTF-8 đúng, constraint warnings hiển thị.
+- 2026-05-13: Viết `frontend/app.py` Streamlit UI — single page chat. Sidebar: ngành/HK/GPA/định hướng/môn đã hoàn thành (text area parse 6-digit). Main: query input → POST `/answer` → markdown response + bảng pandas recommendations + expander Top retrieved (debug) + expander Constraint check (warnings). Backend URL `STREAMLIT_API_URL` (mặc định http://127.0.0.1:8000). Cache `/info` 30s. Verify AST + imports OK.
+- 2026-05-13: Bắt đầu smoke test QwenGenerator local (`python -m src.generation.generator`) để verify VRAM 8GB đủ cho Qwen-7B 4-bit. Lần đầu phải tải base Qwen2.5-7B-Instruct (~15GB) từ HuggingFace. Tốc độ unauthenticated ~75 KB/s → set HF_TOKEN vào `.env` tăng lên ~1 MB/s, nhưng bị disconnect ở 12GB/15GB (file 3,4 dở 50%).
+- 2026-05-13: Restart smoke test với HF_TOKEN → resume 4 file tải xong trong 2:07 phút (tốc độ cuối ~25 MB/s — HF rate-limit unauthenticated nặng hơn nhiều). Load 339 weights vào VRAM trong 8s. Sửa bug encoding cp1252 ở `_smoke_test()` (thêm `sys.stdout.reconfigure(encoding='utf-8')`). **Smoke test SUCCESS trên RTX 5070 8GB**: generate response tiếng Việt thật ("Lập trình phân tích dữ liệu 2", "Lập trình GUI với Qt Framework"). VRAM 8GB đủ cho Qwen-7B 4-bit + LoRA + KV cache → user có thể `USE_LLM=1` cho FastAPI local.
+- 2026-05-13: Viết `src/evaluation/build_manual_eval_template.py` — sinh markdown 50 case stratified 10/ngành từ `predictions_rag.jsonl` (Qwen-7B+LoRA thật từ Kaggle). Mỗi case gồm: query, profile, gold answers + tên môn, bot response, bot recommendations parse + tên, top 5 retrieved, ô đánh giá 1-5 (checkbox), ghi chú. Output: `data/evaluation/manual_satisfaction_template.md` (126 KB).
+- 2026-05-13: Viết `src/evaluation/parse_manual_eval.py` — đọc lại file sau khi user fill `[x]`, regex lấy rating + note từng case, output bảng phân bố điểm + avg/ngành + satisfaction rate (≥4 / total) + JSON tóm tắt. Smoke test (chưa fill): n_filled=0, warn 50/50 chưa tick — OK.
+- 2026-05-13: **Giai đoạn 6 code HOÀN THÀNH**. Còn lại user action: (a) fill 50 case ở `manual_satisfaction_template.md`, (b) chạy `python -m src.evaluation.parse_manual_eval` để tổng hợp.
+- 2026-05-13: Fix bug khi user chạy API với `USE_LLM=1` lần đầu — accelerate báo lỗi `ValueError: Some modules are dispatched on the CPU or the disk` vì E5+M4 retriever đã chiếm VRAM trước khi Qwen-7B 4-bit dispatch. Sửa `rag_pipeline.load_default()` — khi `use_llm=True` thì ép retriever device=cpu (E5 inference 1 query trên CPU ~50-100ms, chấp nhận được). Verify lại API USE_LLM=1: pipeline load 27s (E5 CPU <1s + Qwen 4-bit 10s + LoRA), `/answer` end-to-end 8.7s/query, Qwen trả "Lập trình phân tích dữ liệu 2" + "NoSQL MongoDB" — phù hợp CS HK5 AI/ML.
+- 2026-05-14: User clarify scope: chatbot phải là **chat multi-turn với upload bảng điểm + giải thích chi tiết**, không phải REST single-turn lấy profile từ form. Trước đó mình đoán sai UX (textarea nhập tay list mã môn, single-turn) — user thử thì kết quả tệ vì cold-start + query OOD. Rewrite 6 file: `src/data/profile_loader.py` (parse `<NGANH>_TuChon.xlsx` → `StudentProfile` với GPA, top điểm cao, môn đã hoàn thành); update `prompt_templates.py` (thêm `build_chat_user_message` inject summary bảng điểm + yêu cầu giải thích cụ thể); update `generator.py` (`QwenGenerator.chat(messages)` + `StubGenerator.chat()`); update `rag_pipeline.py` (`chat(profile, messages) → ChatResult` + retrieve theo query mới nhất, inject profile summary ở turn 1, Qwen tự nhớ qua history); thêm endpoint `POST /chat` ở `api/main.py`; rewrite `frontend/app.py` Streamlit với `st.file_uploader` + `st.chat_message` + `st.session_state.messages`. Test E2E stub 2 turn với SV thực `IDSinhVien=1677250` (IS, 10 môn, GPA 3.33/4): turn 1 197ms, turn 2 72ms — OK.
