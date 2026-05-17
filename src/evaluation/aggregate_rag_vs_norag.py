@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 from src.evaluation.metrics import compute_retrieval_metrics
@@ -96,8 +97,8 @@ def format_table(result: dict) -> str:
     keys = [k for k in m_rag if k in m_norag]
 
     lines = [
-        f"| Metric | RAG | noRAG | Δ (RAG − noRAG) |",
-        f"|---|---:|---:|---:|",
+        "| Metric | RAG | noRAG | Delta (RAG - noRAG) |",
+        "|---|---:|---:|---:|",
     ]
     for k in keys:
         lines.append(f"| {k} | {m_rag[k]:.4f} | {m_norag[k]:.4f} | {delta[k]:+.4f} |")
@@ -105,6 +106,8 @@ def format_table(result: dict) -> str:
 
 
 def main() -> None:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--rag",
@@ -135,7 +138,7 @@ def main() -> None:
         s = result["pred_length_stats"][variant]
         print(
             f"  {variant}: avg={s['avg']:.2f}  empty={s['empty']}  "
-            f"≥1={s['ge_1']}  ≥5={s['ge_5']}"
+            f">=1:{s['ge_1']}  >=5:{s['ge_5']}"
         )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)

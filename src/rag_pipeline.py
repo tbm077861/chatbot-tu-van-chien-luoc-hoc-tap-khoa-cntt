@@ -42,7 +42,16 @@ from src.generation.generator import (  # noqa: E402
     StubGenerator,
     parse_recommendations,
 )
-from src.generation.prompt_templates import build_user_message, format_context  # noqa: E402
+from src.generation.intent_classifier import Intent, classify_intent  # noqa: E402
+from src.generation.prompt_templates import (  # noqa: E402
+    SYSTEM_PROMPT,
+    build_chat_user_message,
+    build_user_message,
+    enrich_short_response,
+    format_context,
+)
+from src.generation.regulation_qa import RegulationQA  # noqa: E402
+from src.retrieval.prereq_qa import PrereqQA  # noqa: E402
 from src.retrieval.bm25_retriever import BM25Retriever  # noqa: E402
 from src.retrieval.constraint_checker import (  # noqa: E402
     ConstraintChecker,
@@ -51,6 +60,51 @@ from src.retrieval.constraint_checker import (  # noqa: E402
 from src.retrieval.dense_retriever import DenseRetrieverM4  # noqa: E402
 from src.retrieval.hybrid_retriever import HybridRetriever  # noqa: E402
 from src.retrieval.reranker import CrossEncoderReranker  # noqa: E402
+
+
+@dataclass
+class ChatResult:
+    """Kết quả 1 lượt chat (turn). Khác `RagResult` ở chỗ giữ messages history."""
+
+    response: str = ""
+    """Assistant text trả về cho user."""
+
+    intent: str = "recommend"
+    """Intent đã phân loại: recommend / regulation / prereq."""
+
+    recommendations: list[str] = field(default_factory=list)
+    """doc_id parse từ response (intent recommend)."""
+
+    retrieved: list[tuple[str, float]] = field(default_factory=list)
+    """Top-K candidates trước constraint (debug, intent recommend)."""
+
+    context_docs: list[dict] = field(default_factory=list)
+    """Doc đưa vào prompt (intent recommend)."""
+
+    target_courses: list[str] = field(default_factory=list)
+    """Mã môn extract từ query (intent prereq)."""
+
+    constraint: ConstraintReport | None = None
+    """Báo cáo constraint (intent recommend)."""
+
+    used_query: str = ""
+    """Query thật sự đưa vào pipeline (= message user cuối)."""
+
+    next_messages: list[dict] = field(default_factory=list)
+    """messages sau khi append assistant turn — để UI lưu lại."""
+
+    def to_dict(self) -> dict:
+        return {
+            "response": self.response,
+            "intent": self.intent,
+            "recommendations": self.recommendations,
+            "retrieved": self.retrieved,
+            "context_docs": self.context_docs,
+            "target_courses": self.target_courses,
+            "constraint": self.constraint.to_dict() if self.constraint else None,
+            "used_query": self.used_query,
+            "next_messages": self.next_messages,
+        }
 
 
 @dataclass
@@ -137,8 +191,14 @@ class RagPipeline:
             use_reranker: True → bật M3 cross-encoder rerank.
             load_4bit: chỉ relevant khi use_llm; 4-bit quantization để vừa VRAM.
         """
-        print("[pipeline] loading dense retriever (M4 + E5)...")
-        dense = DenseRetrieverM4.load_default()
+        # Khi bật LLM, ép retriever lên CPU để dành 8GB VRAM cho Qwen-7B 4-bit.
+        # Inference E5 trên CPU cho 1 query ~50-100ms — chấp nhận được.
+        retriever_device = torch.device("cpu") if use_llm else None
+        print(
+            f"[pipeline] loading dense retriever (M4 + E5) "
+            f"on {retriever_device or 'auto'}..."
+        )
+        dense = DenseRetrieverM4.load_default(device=retriever_device)
 
         print("[pipeline] loading BM25 retriever...")
         sparse = BM25Retriever.from_corpus_file(EMB_DIR / "corpus.jsonl")
@@ -273,6 +333,233 @@ class RagPipeline:
         result.recommendations = parse_recommendations(response, nganh, valid_ids)
 
         return result
+
+    def chat(
+        self,
+        messages: list[dict],
+        nganh: str,
+        completed: list[str] | None = None,
+        in_progress: list[str] | None = None,
+        profile_summary_md: str = "",
+        hk_target: int | None = None,
+        only_tu_chon: bool = True,
+        max_new_tokens: int = 768,
+    ) -> "ChatResult":
+        """Multi-turn chat — wrap retrieval + constraint + generator chat.
+
+        Args:
+            messages: lịch sử conversation, list[{role, content}]. Phần tử
+                cuối phải là role=user (câu hỏi mới nhất).
+            nganh: ngành của sinh viên (lấy từ profile).
+            completed: list mã môn đã hoàn thành (từ profile).
+            in_progress: mã môn cùng kỳ (optional).
+            profile_summary_md: bảng điểm dạng markdown — chỉ inject ở turn 1
+                để Qwen có context. Turn 2+ Qwen nhớ qua history.
+            max_new_tokens: cap generation.
+
+        Returns:
+            ChatResult với response + recommendations + next_messages
+            (= messages + assistant turn mới).
+
+        Raises:
+            ValueError: nếu messages rỗng hoặc message cuối không phải user.
+        """
+        if not messages or messages[-1].get("role") != "user":
+            raise ValueError("messages phải kết thúc bằng role='user'")
+
+        query = messages[-1]["content"].strip()
+        is_first_turn = (
+            sum(1 for m in messages if m.get("role") == "user") == 1
+        )
+
+        # Phân loại intent → dispatch sang handler tương ứng.
+        intent: Intent = classify_intent(query)
+        if intent == "regulation":
+            return self._chat_regulation(messages, query, max_new_tokens)
+        if intent == "prereq":
+            return self._chat_prereq(
+                messages, query, nganh, completed, hk_target, max_new_tokens
+            )
+        # intent == "recommend" — luồng cũ.
+
+        # 1. Retrieval theo query mới nhất.
+        fused = self.hybrid.search(
+            query,
+            top_k=self.candidate_pool,
+            candidate_pool=self.candidate_pool * 2,
+        )
+
+        # 2. Optional rerank.
+        candidates: list[tuple[str, float]] = fused
+        if self.reranker is not None:
+            candidates = self.reranker.rerank(query, fused)
+
+        # 3. Constraint — chỉ giữ môn cùng ngành + hợp lệ prereq.
+        candidate_ids = [d for d, _ in candidates]
+        report = self.constraint.check_recommendations(
+            candidate_ids,
+            nganh=nganh,
+            completed=completed,
+            in_progress=in_progress,
+        )
+
+        # 4. Filter thêm: chỉ môn tự chọn + đúng HK chuẩn (yêu cầu Stage 6 v2).
+        #    Curriculum mỗi HK có pool tu_chon riêng — bot phải gợi đúng pool đó.
+        valid_filtered: list[str] = []
+        seen: set[str] = set()
+        for did in report.valid:
+            meta = self.id2doc.get(did, {})
+            if only_tu_chon and meta.get("loai") != "tu_chon":
+                continue
+            if hk_target is not None and meta.get("hk_chuan") != hk_target:
+                continue
+            if did not in seen:
+                valid_filtered.append(did)
+                seen.add(did)
+
+        # Force-include ALL môn tu_chon của HK target trong NGÀNH user — đảm
+        # bảo Qwen thấy toàn bộ pool, kể cả môn retriever không bắt được trong
+        # top-K (vì retriever search globally). Ưu tiên thứ tự retriever, rồi
+        # thêm môn còn lại theo thứ tự corpus.
+        if hk_target is not None:
+            completed_set = set(completed or [])
+            for did, meta in self.id2doc.items():
+                if not did.startswith(f"{nganh}_"):
+                    continue
+                if meta.get("loai") != "tu_chon":
+                    continue
+                if meta.get("hk_chuan") != hk_target:
+                    continue
+                if meta.get("ma_mon") in completed_set:
+                    continue  # bỏ môn đã học
+                if did in seen:
+                    continue
+                valid_filtered.append(did)
+                seen.add(did)
+
+        # Fallback cuối: nếu vẫn rỗng (HK target không có tu_chon), nới hk_chuan.
+        if not valid_filtered and hk_target is not None:
+            for did in report.valid:
+                meta = self.id2doc.get(did, {})
+                if only_tu_chon and meta.get("loai") != "tu_chon":
+                    continue
+                hk_c = meta.get("hk_chuan")
+                if hk_c is not None and hk_c <= hk_target:
+                    if did not in seen:
+                        valid_filtered.append(did)
+                        seen.add(did)
+
+        valid_top = valid_filtered[: self.top_k_context]
+        context_docs = self._docs_for_context(valid_top)
+        ctx_str = format_context(context_docs)
+
+        # 5. Build new user content cho turn cuối (thay vì raw query).
+        enriched_user = build_chat_user_message(
+            question=query,
+            profile_summary_md=profile_summary_md if is_first_turn else "",
+            retrieved_context=ctx_str,
+            is_first_turn=is_first_turn,
+            hk_target=hk_target,
+        )
+
+        # Rebuild messages: thay user cuối bằng enriched version.
+        chat_messages: list[dict] = [{"role": "system", "content": SYSTEM_PROMPT}]
+        for m in messages[:-1]:
+            chat_messages.append({"role": m["role"], "content": m["content"]})
+        chat_messages.append({"role": "user", "content": enriched_user})
+
+        # 6. Generate. LoRA Stage 4 train trên output ngắn nhưng vẫn cho giải
+        #    thích được nếu prompt rõ + profile có hook (môn điểm cao liên quan
+        #    định hướng). disable_lora=True trên 4-bit có overhead lớn → giữ
+        #    LoRA. Fallback explanation ở dưới nếu response quá ngắn.
+        if isinstance(self.generator, QwenGenerator):
+            response = self.generator.chat(
+                chat_messages, max_new_tokens=max_new_tokens
+            )
+        else:
+            response = self.generator.chat(chat_messages, retrieved_docs=context_docs)
+
+        recs = parse_recommendations(response, nganh, set(self.id2doc.keys()))
+
+        # Fallback giải thích: nếu Qwen response quá ngắn (LoRA Stage 4 thường
+        # output 1-2 môn không giải thích), append cluster-based template để
+        # user luôn nhận được giải thích đầy đủ.
+        if len(response) < 300 or len(recs) < 3:
+            response = enrich_short_response(
+                response=response,
+                recommendations=recs,
+                context_docs=context_docs,
+                query=query,
+                profile_summary_md=profile_summary_md,
+            )
+
+        # next_messages = history gốc + assistant response (để UI giữ tiếp).
+        next_messages = list(messages) + [{"role": "assistant", "content": response}]
+
+        return ChatResult(
+            response=response,
+            intent="recommend",
+            recommendations=recs,
+            retrieved=fused,
+            context_docs=context_docs,
+            constraint=report,
+            used_query=query,
+            next_messages=next_messages,
+        )
+
+    # ===== Multi-intent handlers (Stage 7) =====
+
+    def _chat_regulation(
+        self,
+        messages: list[dict],
+        query: str,
+        max_new_tokens: int,
+    ) -> "ChatResult":
+        """Intent regulation: inject regulations.json → Qwen chat."""
+        # Lazy-init handler (chỉ load 1 lần/instance).
+        if not hasattr(self, "_reg_qa"):
+            self._reg_qa = RegulationQA()
+        response = self._reg_qa.answer(
+            history=messages,
+            generator=self.generator,
+            max_new_tokens=max_new_tokens,
+        )
+        next_messages = list(messages) + [{"role": "assistant", "content": response}]
+        return ChatResult(
+            response=response,
+            intent="regulation",
+            used_query=query,
+            next_messages=next_messages,
+        )
+
+    def _chat_prereq(
+        self,
+        messages: list[dict],
+        query: str,
+        nganh: str,
+        completed: list[str] | None,
+        hk_target: int | None,
+        max_new_tokens: int,
+    ) -> "ChatResult":
+        """Intent prereq: extract môn → lookup graph → Qwen format response."""
+        if not hasattr(self, "_prereq_qa"):
+            self._prereq_qa = PrereqQA(self.constraint, self.id2doc)
+        response, targets = self._prereq_qa.answer(
+            history=messages,
+            nganh=nganh,
+            completed=completed,
+            generator=self.generator,
+            hk_target=hk_target,
+            max_new_tokens=max_new_tokens,
+        )
+        next_messages = list(messages) + [{"role": "assistant", "content": response}]
+        return ChatResult(
+            response=response,
+            intent="prereq",
+            target_courses=targets,
+            used_query=query,
+            next_messages=next_messages,
+        )
 
 
 def _cli() -> None:

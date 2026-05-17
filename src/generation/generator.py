@@ -99,6 +99,15 @@ class StubGenerator:
             lines.append(f"{i}. **{ten}** (mã {ma}, {tc} TC, {loai})")
         return "\n".join(lines)
 
+    def chat(
+        self,
+        messages: list[dict],  # noqa: ARG002 (signature compat với Qwen)
+        retrieved_docs: list[dict] | None = None,
+        **kwargs,  # noqa: ARG002
+    ) -> str:
+        """Multi-turn signature — stub không hiểu history, format y `generate()`."""
+        return self.generate("", retrieved_docs or [])
+
 
 class QwenGenerator:
     """M5 Qwen2.5-7B + LoRA adapter, inference local 4-bit.
@@ -191,28 +200,68 @@ class QwenGenerator:
         repetition_penalty: float = 1.05,
         do_sample: bool = False,
     ) -> str:
-        """Generate response cho 1 user message.
+        """Generate response cho 1 user message (single-turn, dùng cho /answer cũ).
 
-        Args:
-            user_message: user content đã format (gồm cả context). Xem
-                `prompt_templates.build_user_message()`.
-            retrieved_docs: KHÔNG dùng trong Qwen — context đã embed vào
-                user_message rồi. Giữ argument để khớp signature với Stub.
-            max_new_tokens: số token tối đa sinh ra (M5 v2 dùng 512).
-            repetition_penalty: phạt lặp (1.05 từ M5 v2).
-            do_sample: False = greedy (deterministic, khuyến nghị cho recommendation).
-
-        Returns:
-            Chuỗi response (đã decode + skip special tokens).
+        Multi-turn chat dùng `chat()`. Giữ method này cho backward compat.
         """
         messages = [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_message},
         ]
+        return self._generate_from_messages(
+            messages, max_new_tokens, repetition_penalty, do_sample
+        )
+
+    @torch.no_grad()
+    def chat(
+        self,
+        messages: list[dict],
+        max_new_tokens: int = 768,
+        repetition_penalty: float = 1.05,
+        do_sample: bool = False,
+        disable_lora: bool = False,
+    ) -> str:
+        """Multi-turn chat — apply Qwen chat template cho list message.
+
+        Args:
+            messages: list[{role, content}]. Phải bắt đầu bằng role=system
+                (nếu thiếu, sẽ tự prepend SYSTEM_PROMPT để khớp training).
+            max_new_tokens: 768 mặc định cho chat (cần verbose hơn để giải thích).
+            repetition_penalty / do_sample: same as `generate()`.
+            disable_lora: True → bypass LoRA adapter, dùng base Qwen-Instruct.
+                LoRA Stage 4 train trên output ngắn (1-2 môn, không giải thích).
+                Khi cần response dài có giải thích (intent recommend), nên bật
+                để base model follow prompt tốt hơn.
+
+        Returns:
+            Assistant response text (đã decode, skip special tokens).
+        """
+        if not messages or messages[0].get("role") != "system":
+            messages = [{"role": "system", "content": SYSTEM_PROMPT}] + list(messages)
+        if disable_lora and hasattr(self.model, "disable_adapter"):
+            with self.model.disable_adapter():
+                return self._generate_from_messages(
+                    messages, max_new_tokens, repetition_penalty, do_sample
+                )
+        return self._generate_from_messages(
+            messages, max_new_tokens, repetition_penalty, do_sample
+        )
+
+    @torch.no_grad()
+    def _generate_from_messages(
+        self,
+        messages: list[dict],
+        max_new_tokens: int,
+        repetition_penalty: float,
+        do_sample: bool,
+    ) -> str:
+        """Helper chung — apply chat template + generate. Dùng nội bộ."""
         prompt = self.tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
-        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
+        inputs = self.tokenizer(
+            prompt, return_tensors="pt", truncation=True, max_length=8192
+        ).to(self.model.device)
         out = self.model.generate(
             **inputs,
             max_new_tokens=max_new_tokens,
@@ -228,6 +277,8 @@ class QwenGenerator:
 
 def _smoke_test() -> None:
     """Smoke test CLI: load model và generate 1 query test."""
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser()
     ap.add_argument(
         "--query",
